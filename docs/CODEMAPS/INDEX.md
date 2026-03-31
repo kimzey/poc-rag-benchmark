@@ -1,8 +1,8 @@
-<!-- Generated: 2026-03-31 | Files scanned: 52 | Token estimate: ~480 -->
+<!-- Generated: 2026-03-31 | Files scanned: 76 | Token estimate: ~520 -->
 
 # RAG Spike Codemaps Index
 
-**Last Updated:** 2026-03-31 | **Project Phase:** 1 ✅ Vector DB | 2 🔄 RAG Framework | 3 🔄 Embedding Models | 3.5 🆕 LLM Providers | 4 🆕 API Layer | 5 🆕 Integration Testing
+**Last Updated:** 2026-03-31 | **Project Phase:** 1 ✅ Vector DB | 2 🔄 RAG Framework | 3 🔄 Embedding Models | 3.5 🆕 LLM Providers | 4 🆕 API Layer | 5 🆕 Integration Testing | 6 🔄 RFC & Docs
 
 ## Quick Navigation
 
@@ -114,7 +114,23 @@ spike-rak/
 │       └── webhooks/
 │           └── line.py                 # POST /api/v1/webhooks/line (LINE Messaging API)
 │
-└── docs/CODEMAPS/                        # You are here
+├── docs/
+│   ├── README.md                          # Docs hub (Thai)
+│   ├── glossary.md                        # RAG terminology glossary (Thai)
+│   ├── phases/                            # Per-phase detailed docs (7 files)
+│   ├── guides/
+│   │   ├── quickstart.md                  # Setup + all phases
+│   │   ├── api-usage.md                   # API Server usage (Phase 4)
+│   │   ├── benchmarking.md                # Benchmark guide + interpreting results
+│   │   └── adding-adapters.md             # How to add new adapters
+│   ├── adr/                               # 6 Architecture Decision Records
+│   ├── rfc/RFC-001-rag-tech-stack.md      # RFC draft (TODO sections pending benchmarks)
+│   ├── presentation/outline.md            # Presentation outline
+│   └── CODEMAPS/                          # You are here
+│
+├── README.md                              # Project README (Thai)
+├── CONTRIBUTING.md                        # Contribution guide
+└── CLAUDE.md                              # Claude Code guidance
 ```
 
 ---
@@ -129,7 +145,7 @@ spike-rak/
 | 3.5 | LLM Provider Comparison | 🆕 Code done | `evaluate.py` + 4 provider adapters (11 models) |
 | 4 | API Layer & Auth Design | 🆕 Code done | FastAPI + JWT + RBAC + Permission-Filtered Retrieval + LINE webhook |
 | 5 | Integration Testing | 🆕 Code done | 27 E2E tests, 7 scenarios, Locust load testing |
-| 6 | RFC + Knowledge Sharing | ⏳ Not started | Final RFC document |
+| 6 | RFC & Knowledge Sharing | 🔄 Docs done | RFC draft, 6 ADRs, guides, glossary, presentation outline |
 
 ---
 

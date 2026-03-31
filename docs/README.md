@@ -62,6 +62,9 @@ spike-rak/
 |--------|--------|
 | [guides/quickstart.md](guides/quickstart.md) | ติดตั้ง + เริ่มต้นใช้งาน ทุก phase |
 | [guides/api-usage.md](guides/api-usage.md) | วิธีใช้ API Server อย่างละเอียด (Phase 4) |
+| [guides/benchmarking.md](guides/benchmarking.md) | วิธีรัน benchmark + อ่านผลลัพธ์ทุก phase |
+| [guides/adding-adapters.md](guides/adding-adapters.md) | วิธีเพิ่ม adapter ใหม่ (Vector DB, Embedding, LLM, RAG) |
+| [glossary.md](glossary.md) | คำศัพท์ RAG สำหรับทีม |
 
 ---
 

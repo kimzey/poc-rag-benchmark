@@ -1,8 +1,8 @@
-<!-- Generated: 2026-03-31 | Files scanned: 62 | Token estimate: ~1350 -->
+<!-- Generated: 2026-03-31 | Files scanned: 76 | Token estimate: ~1400 -->
 
 # Architecture Codemap
 
-**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 + 3 🔄 + 3.5 🆕 + 4 🆕 (API Layer) + 5 🆕 (Integration Tests)
+**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 + 3 🔄 + 3.5 🆕 + 4 🆕 (API Layer) + 5 🆕 (Integration Tests) + 6 🔄 (RFC & Docs)
 
 ## Overview
 

@@ -1,64 +1,64 @@
-Codemap Update Report — 2026-03-31
-===================================
+Codemap Update Report — 2026-03-31 (Phase 6 docs update)
+==========================================================
 
-Previous scan: 2026-03-31 (Phase 1 only, 9 files scanned)
-Current scan:  2026-03-31 (Phase 1 + 2, 29 files scanned)
+Previous scan: 2026-03-31 (Phases 1-5, 62 files scanned)
+Current scan:  2026-03-31 (Phases 1-6, 76 files scanned)
 
-## Files Added (Phase 2)
+## Files Added (Phase 6 — RFC & Documentation)
 
-benchmarks/rag-framework/__init__.py
-benchmarks/rag-framework/base.py                    [NEW] BaseRAGPipeline ABC, RAGResult, IndexStats
-benchmarks/rag-framework/config.py                  [NEW] Env-based config (OpenRouter, embedding model, chunking)
-benchmarks/rag-framework/evaluate.py               [NEW] Evaluation runner: all 4 frameworks, comparison tables, JSON output
-benchmarks/rag-framework/requirements.txt          [NEW] LlamaIndex, LangChain, Haystack, sentence-transformers, faiss-cpu
-benchmarks/rag-framework/frameworks/bare_metal/pipeline.py     [NEW] ~90 LOC — numpy cosine + openai client
-benchmarks/rag-framework/frameworks/llamaindex_poc/pipeline.py [NEW] ~70 LOC — VectorStoreIndex + global Settings
-benchmarks/rag-framework/frameworks/langchain_poc/pipeline.py  [NEW] ~80 LOC — FAISS + RetrievalQA (LCEL noted)
-benchmarks/rag-framework/frameworks/haystack_poc/pipeline.py   [NEW] ~90 LOC — DAG pipeline with typed socket connections
-benchmarks/rag-framework/results/.gitkeep
+README.md                           [NEW] Root project README (Thai), architecture diagram, quick start
+CONTRIBUTING.md                     [NEW] Contribution guide: setup, deps, commit convention, adapter guide
+CLAUDE.md                           [NEW] Claude Code guidance for this repo
 
-datasets/hr_policy_th.md      [NEW] Thai HR policy (leave, WFH, OT, probation, benefits)
-datasets/tech_docs_en.md      [NEW] English API documentation (endpoints, auth, rate limits)
-datasets/faq_mixed.md         [NEW] Mixed Thai+English FAQ (cross-references both docs)
-datasets/questions.json       [NEW] 10 test questions across 4 categories
+docs/guides/benchmarking.md         [NEW] Benchmark guide: all 4 phases, how to run + interpret results
+docs/guides/adding-adapters.md      [NEW] Tutorial: add adapters (VectorDB, RAG, Embedding, LLM) with code examples
+docs/glossary.md                    [NEW] RAG terminology glossary (Thai), ~50 terms across 7 categories
 
-.env.example                  [NEW] Environment variables template
+docs/phases/phase-1-vector-db.md    [EXISTING] Phase 1 detailed doc
+docs/phases/phase-2-rag-framework.md [EXISTING] Phase 2 detailed doc
+docs/phases/phase-3-embedding.md    [EXISTING] Phase 3 detailed doc
+docs/phases/phase-3.5-llm-provider.md [EXISTING] Phase 3.5 detailed doc
+docs/phases/phase-4-api-auth.md     [EXISTING] Phase 4 detailed doc
+docs/phases/phase-5-integration.md  [EXISTING] Phase 5 detailed doc
+docs/phases/phase-6-rfc.md          [EXISTING] Phase 6 overview
+
+docs/adr/ADR-001-vector-db.md       [EXISTING] Architecture Decision Record
+docs/adr/ADR-002-rag-framework.md   [EXISTING]
+docs/adr/ADR-003-embedding-model.md [EXISTING]
+docs/adr/ADR-004-llm-provider.md    [EXISTING]
+docs/adr/ADR-005-auth.md            [EXISTING]
+docs/adr/ADR-006-anti-lock-in.md    [EXISTING]
+
+docs/rfc/RFC-001-rag-tech-stack.md  [EXISTING] RFC draft (TODO sections pending benchmarks)
+docs/presentation/outline.md        [EXISTING] Presentation outline
 
 ## Files Modified
 
-Makefile                      [UPDATED] Added Phase 2 targets: install-rag, rag-eval, rag-eval-no-llm, rag-eval-framework
-docs/CODEMAPS/architecture.md [UPDATED] Added Phase 2 system diagram, BaseRAGPipeline, framework comparison table
-docs/CODEMAPS/dependencies.md [UPDATED] Added Phase 2 packages, OpenRouter config, env vars
-docs/CODEMAPS/data.md         [UPDATED] Added Phase 2 dataset schema, questions.json format, data flow
-docs/CODEMAPS/INDEX.md        [UPDATED] Updated phase status, added Phase 2 to project tree
+docs/README.md                      [UPDATED] Added links to 3 new guides + glossary
 
 ## New Dependencies Detected
 
-Phase 2 (rag-framework/requirements.txt):
-- openai ≥1.30.0           (OpenRouter via OpenAI-compatible client)
-- sentence-transformers ≥3.0.0  (local embeddings, no API key)
-- torch ≥2.0.0             (backend for sentence-transformers)
-- llama-index-core ≥0.11   (LlamaIndex framework)
-- langchain ≥0.3.0         (LangChain framework)
-- langchain-community ≥0.3 (FAISS, TextLoader)
-- faiss-cpu ≥1.8.0         (in-memory vector store for LangChain)
-- haystack-ai ≥2.5.0       (Haystack v2 framework)
-
-External services (Phase 2):
-- OpenRouter API (https://openrouter.ai) — requires OPENROUTER_API_KEY
+(none — no pyproject.toml changes)
 
 ## Architecture Changes
 
-- Added second benchmark suite: benchmarks/rag-framework/
-- New abstraction layer: BaseRAGPipeline (mirrors VectorDBClient pattern from Phase 1)
-- Real document dataset added (Thai + English + Mixed) — previously only synthetic vectors
-- Evaluation now covers both infrastructure (vector DB) and application layer (RAG framework)
+- Phase 6 status: ⏳ Not started → 🔄 Docs done
+- No code architecture changes (API routes, ABCs, implementations unchanged)
+
+## Codemap Updates Applied
+
+docs/CODEMAPS/INDEX.md              [UPDATED] Phase 6 status, docs/ tree expanded, file count 52→76
+docs/CODEMAPS/architecture.md       [UPDATED] Header metadata (file count, phase list)
+docs/CODEMAPS/dependencies.md       (no changes needed — deps unchanged)
+docs/CODEMAPS/data.md               (no changes needed — data schemas unchanged)
 
 ## Staleness Warnings
 
 None — all codemaps updated today.
 
+## Diff Percentage: ~8% (minor — documentation only, no code changes)
+
 ## Next Update Recommended After
 
-- Phase 2 benchmark results are collected (add to data.md: actual LOC counts, latency numbers)
-- Phase 3 (Embedding Model Comparison) code is written
+- Benchmark results are collected (fill TODO sections in RFC-001 and ADRs)
+- Any new adapter implementations added
