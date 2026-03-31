@@ -1,8 +1,8 @@
-<!-- Generated: 2026-03-31 | Files scanned: 12 | Token estimate: ~750 -->
+<!-- Generated: 2026-03-31 | Files scanned: 18 | Token estimate: ~900 -->
 
 # Data Schema & Generation Codemap
 
-**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 + 3 🔄 + 3.5 🆕
+**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 + 3 🔄 + 3.5 🆕 + 4 🆕
 
 ---
 
@@ -399,3 +399,147 @@ Default: `openrouter_gpt4o_mini` (fast + cheap)
 ```
 
 **Ranking:** Results sorted by `weighted_score` (highest first); rank 1 = "⭐ RECOMMENDED"
+
+---
+
+## Phase 4 — RAG API Layer Data Models
+
+### User Model
+
+```python
+class UserType(str, Enum):
+    employee = "employee"
+    customer = "customer"
+    admin = "admin"
+    service = "service"
+
+class User(BaseModel):
+    user_id: str                    # e.g., "u001"
+    username: str                   # e.g., "alice_admin"
+    user_type: UserType
+    is_active: bool = True
+    
+    # Computed properties:
+    @property
+    def permissions(Self) -> Set[Permission]     # role-based permissions
+    @property
+    def allowed_access_levels(Self) -> Set[AccessLevel]  # document visibility
+```
+
+### RBAC Model
+
+**Permissions by role:**
+
+| UserType | Permissions | Can access docs |
+|----------|-----------|-----------------|
+| customer | doc:read, chat:query | customer_kb only |
+| employee | doc:read, doc:upload, doc:index, chat:query, analytics:read | customer_kb, internal_kb |
+| admin | all 7 permissions | customer_kb, internal_kb, confidential_kb |
+| service | doc:read, chat:query | customer_kb, internal_kb |
+
+### Access Level Model
+
+```python
+class AccessLevel(str, Enum):
+    customer_kb = "customer_kb"           # Public-facing docs (all roles see it)
+    internal_kb = "internal_kb"           # Employee-only docs
+    confidential_kb = "confidential_kb"   # Admin-only docs
+```
+
+### Document Model
+
+```python
+@dataclass
+class Document:
+    doc_id: str                          # e.g., "d001"
+    title: str                           # e.g., "HR Policy TH"
+    content: str                         # Text content
+    access_level: AccessLevel            # Controls visibility via filter
+    embedding: list[float] = []          # Placeholder for vector DB
+```
+
+### Chat Request/Response
+
+```python
+class ChatMessage(BaseModel):
+    role: str               # "user" | "assistant" | "system"
+    content: str
+
+class ChatRequest(BaseModel):
+    messages: list[ChatMessage]
+    collection: str | None = None       # Optional: restrict to collection
+    top_k: int = 3
+
+class RetrievedChunk(BaseModel):
+    doc_id: str
+    title: str
+    content: str
+    access_level: str                   # Echoes the access level (for auditability)
+    score: float                        # Cosine similarity 0–1
+
+class ChatResponse(BaseModel):
+    answer: str                         # LLM-generated answer
+    retrieved_chunks: list[RetrievedChunk]  # Visible chunks that informed answer
+    model: str                          # e.g., "openai/gpt-4o-mini"
+    usage: dict | None = None           # Token counts (input, output)
+```
+
+### Token Model
+
+```python
+class Token(BaseModel):
+    access_token: str                   # JWT token
+    token_type: str = "bearer"
+
+class TokenData(BaseModel):
+    user_id: str
+    username: str
+    user_type: UserType
+```
+
+### Proof-of-Concept Store Data
+
+**api/store.py** contains sample data:
+
+**Users (5 PoC accounts):**
+| user_id | username | user_type |
+|---------|----------|-----------|
+| u001 | alice_admin | admin |
+| u002 | bob_employee | employee |
+| u003 | carol_customer | customer |
+| u004 | svc_line_bot | service |
+
+**Documents (5 sample docs with access levels):**
+| doc_id | title | access_level | content |
+|--------|-------|--------------|---------|
+| d001 | HR Policy TH | internal_kb | นโยบายการลาพักร้อน... |
+| d002 | Product FAQ | customer_kb | สินค้ารับประกันกี่ปี... |
+| d003 | Tech Spec Internal | internal_kb | Architecture ภายใน... |
+| d004 | Executive Salary Band | confidential_kb | เงินเดือนผู้บริหาร... |
+| d005 | Return Policy | customer_kb | นโยบายการคืนสินค้า... |
+
+### Permission-Filtered Retrieval Flow
+
+```
+ChatRequest from authenticated user
+    ↓
+Depends(require_permission(Permission.chat_query))  — RBAC check at route
+    ↓
+retrieve(query, user)  — RAG retrieval module
+    ↓
+user.allowed_access_levels  — get visible access levels
+    ↓
+_vector_search(query, allowed_levels, top_k)  — server-side filter
+    ↓
+Filter doc_store for access_level in allowed_levels  — access control enforced
+    ↓
+return list[RetrievedChunk]  — only user-visible chunks
+    ↓
+run_rag(): concatenate visible chunks into LLM context
+    ↓
+LLM generates answer (answer never reveals confidential info)
+    ↓
+ChatResponse with visible chunks + answer
+```
+
+**Key principle:** Permission filtering happens BEFORE scoring, matching production vector DB filter semantics (not post-hoc filtering).

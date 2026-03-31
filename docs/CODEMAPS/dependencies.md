@@ -1,8 +1,8 @@
-<!-- Generated: 2026-03-31 | Files scanned: 10 | Token estimate: ~750 -->
+<!-- Generated: 2026-03-31 | Files scanned: 18 | Token estimate: ~950 -->
 
 # Dependencies & Infrastructure Codemap
 
-**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 + 3 🔄 + 3.5 🆕
+**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 + 3 🔄 + 3.5 🆕 + 4 🆕
 
 ---
 
@@ -208,4 +208,100 @@ LLM_TEMPERATURE=0.0                     # Temperature for consistency
 | Phase 2 | 2+ cores | 4GB+ | 1GB+ | sentence-transformers model ~80–500MB |
 | Phase 3 | 2+ cores | 4GB+ | 2GB+ | Embedding models (BGE-M3, E5-large) ~500MB–1.5GB |
 | Phase 3.5 (Ollama) | 4+ cores + GPU | 16GB+ | 10GB+ | Local LLM inference; CPU-only slower (~5–10s/token) |
-| Phase 3.5 (API) | 1+ core | 2GB+ | 100MB | Network-based; no local compute needed |
+| Phase 3.5 (API) | 1+ core | 2GB+ | 100MB | Network-based; no local compute needed
+
+---
+
+## Phase 4 — Python Packages
+
+**File:** `api/requirements.txt` (expected)
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `fastapi` | ≥0.100.0 | Web framework, async routes, dependency injection |
+| `uvicorn` | ≥0.23.0 | ASGI server, hot reload |
+| `pydantic` | ≥2.0.0 | Request/response validation, User/Chat models |
+| `pydantic-settings` | ≥2.0.0 | `.env` configuration loading |
+| `python-jose` | ≥3.3.0 | JWT token encode/decode (HMAC-SHA256) |
+| `passlib` | ≥1.7.0 | Password hashing (bcrypt) |
+| `httpx` | ≥0.24.0 | Async HTTP client for LINE webhook replies |
+| `openai` | ≥1.30.0 | OpenAI-compatible LLM endpoint (OpenRouter/Anthropic/OpenAI) |
+| `python-dotenv` | ≥1.0.0 | `.env` loading |
+
+---
+
+## Phase 4 — Environment Variables
+
+**File:** `.env.example` (Phase 4 additions)
+
+```bash
+# Phase 4: FastAPI app
+OPENAPI_URL=/docs
+REDOC_URL=/redoc
+APP_NAME="RAG API — Phase 4 PoC"
+
+# Phase 4: JWT
+JWT_SECRET_KEY=your-secret-key-here            # Used for signing tokens
+JWT_ALGORITHM=HS256
+JWT_EXPIRATION_MINUTES=60
+
+# Phase 4: LLM (same as Phase 3.5)
+OPENROUTER_API_KEY=sk-or-...
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
+RAG_LLM_MODEL=anthropic/claude-3-haiku         # Default: fast + cheap
+
+# Phase 4: LINE Webhook
+LINE_CHANNEL_SECRET=your_line_channel_secret
+LINE_CHANNEL_ACCESS_TOKEN=your_line_access_token
+
+# Phase 4: Retrieval tuning
+RAG_CHUNK_SIZE=500
+RAG_CHUNK_OVERLAP=50
+RAG_TOP_K=3
+```
+
+---
+
+## Phase 4 — Makefile Targets
+
+```bash
+make api-run          # uvicorn api.main:app --reload
+make api-docs         # Visit http://localhost:8000/docs
+make api-test         # pytest tests/api/
+```
+
+---
+
+## Phase 4 — Infrastructure Notes
+
+**PoC Stores (api/store.py):**
+- user_store: Dict[user_id, User] — 5 demo users with roles
+- password_store: Dict[username, hashed_pwd] — PoC credentials
+- doc_store: List[Document] — 5 sample documents with access levels
+
+**Production Replacements:**
+| Component | PoC | Production |
+|-----------|-----|-----------|
+| user_store | In-memory dict | PostgreSQL users table + sessions |
+| doc_store | In-memory list | Vector DB (Qdrant/Milvus) with metadata filters |
+| doc embedding | Placeholder | Real embeddings (BGE-M3 or text-embedding-3) |
+| LLM endpoint | Mock or OpenRouter | OpenRouter / Direct API / Self-hosted Ollama |
+
+**API Server:**
+- Dev: `uvicorn api.main:app --reload` on http://localhost:8000
+- Prod: `uvicorn api.main:app --host 0.0.0.0 --port 8000` or Docker
+- OpenAPI schema at `/docs` (Swagger UI) and `/redoc` (ReDoc)
+
+**Authentication Flow:**
+1. User calls `POST /api/v1/auth/token` with username + password
+2. Server looks up password_store, verifies hash
+3. Creates JWT token with user_id, username, user_type
+4. Client sends token in `Authorization: Bearer <token>` header
+5. Subsequent requests use FastAPI Depends(get_current_user) to extract user
+6. Route-level checks enforce permissions: `Depends(require_permission(Permission.chat_query))`
+
+**Permission-Filtered Retrieval:**
+- VectorDB filter (production): metadata filter on insert (Qdrant `query_filter`)
+- PoC simulation: Python list comprehension filtering visible docs before scoring
+- Both enforce: access_level visibility BEFORE similarity scoring (secure-by-design) |

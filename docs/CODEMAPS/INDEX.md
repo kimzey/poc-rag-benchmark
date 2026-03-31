@@ -2,7 +2,7 @@
 
 # RAG Spike Codemaps Index
 
-**Last Updated:** 2026-03-31 | **Project Phase:** 1 ✅ Vector DB | 2 🔄 RAG Framework | 3 🔄 Embedding Models | 3.5 🆕 LLM Providers
+**Last Updated:** 2026-03-31 | **Project Phase:** 1 ✅ Vector DB | 2 🔄 RAG Framework | 3 🔄 Embedding Models | 3.5 🆕 LLM Providers | 4 🆕 API Layer
 
 ## Quick Navigation
 
@@ -83,6 +83,25 @@ spike-rak/
 │       │   └── ollama.py                # Self-hosted llama3.1:8b
 │       └── results/                     # llm_provider_results.json
 │
+├── api/                                  # [Phase 4 🆕] FastAPI application
+│   ├── main.py                          # FastAPI app, route registration
+│   ├── config.py                        # Pydantic settings from .env
+│   ├── store.py                         # In-memory PoC: users, passwords, documents
+│   ├── auth/
+│   │   ├── models.py                   # User, UserType, Permission, AccessLevel, RBAC
+│   │   ├── jwt_handler.py              # Token encode/decode, password hashing
+│   │   └── dependencies.py             # FastAPI dependency injection (auth, permissions)
+│   ├── rag/
+│   │   ├── models.py                   # Pydantic schemas: ChatRequest, ChatResponse
+│   │   ├── retrieval.py                # Permission-filtered vector search
+│   │   └── pipeline.py                 # run_rag() orchestrator
+│   └── routes/
+│       ├── auth_routes.py              # POST /api/v1/auth/token
+│       ├── chat.py                     # POST /api/v1/chat/completions
+│       ├── documents.py                # GET/POST /api/v1/documents/*
+│       └── webhooks/
+│           └── line.py                 # POST /api/v1/webhooks/line (LINE Messaging API)
+│
 └── docs/CODEMAPS/                        # You are here
 ```
 
@@ -96,7 +115,7 @@ spike-rak/
 | 2 | RAG Framework Comparison | 🔄 Code done, not run yet | `evaluate.py` + 4 framework PoCs |
 | 3 | Embedding Model Comparison | 🔄 Code done | `evaluate.py` + 5 model adapters (Thai/Eng) |
 | 3.5 | LLM Provider Comparison | 🆕 Code done | `evaluate.py` + 4 provider adapters (11 models) |
-| 4 | API Layer & Auth Design | ⏳ Not started | FastAPI + JWT + RBAC |
+| 4 | API Layer & Auth Design | 🆕 Code done | FastAPI + JWT + RBAC + Permission-Filtered Retrieval + LINE webhook |
 | 5 | Integration Testing | ⏳ Not started | End-to-end pipeline |
 | 6 | RFC + Knowledge Sharing | ⏳ Not started | Final RFC document |
 
@@ -134,6 +153,40 @@ make install-llm && make llm-eval-all
 
 # Single LLM provider
 make llm-eval-provider P=openrouter_gpt4o_mini
+
+# Phase 4 (FastAPI API server)
+make api-run                               # Run on http://localhost:8000
+
+# Phase 4 (View API docs)
+# Visit: http://localhost:8000/docs (Swagger UI)
+#        http://localhost:8000/redoc (ReDoc)
+```
+
+### Phase 4 Example Flows
+
+**Login via JWT:**
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=bob_employee&password=emp123"
+# Response: {"access_token": "eyJ...", "token_type": "bearer"}
+```
+
+**Query RAG with permission-filtered retrieval:**
+```bash
+TOKEN="eyJ..."
+curl -X POST http://localhost:8000/api/v1/chat/completions \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"messages": [{"role": "user", "content": "What is the leave policy?"}], "top_k": 3}'
+# Response: {"answer": "...", "retrieved_chunks": [...], "model": "anthropic/claude-3-haiku"}
+```
+
+**Get current user info + permissions:**
+```bash
+curl -X GET http://localhost:8000/api/v1/me \
+  -H "Authorization: Bearer $TOKEN"
+# Response: {"user_id": "u002", "username": "bob_employee", "user_type": "employee", "permissions": [...]}
 ```
 
 ---

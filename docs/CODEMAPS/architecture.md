@@ -1,8 +1,8 @@
-<!-- Generated: 2026-03-31 | Files scanned: 38 | Token estimate: ~1000 -->
+<!-- Generated: 2026-03-31 | Files scanned: 58 | Token estimate: ~1200 -->
 
 # Architecture Codemap
 
-**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 + 3 🔄 + 3.5 🆕 (LLM Providers)
+**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 + 3 🔄 + 3.5 🆕 + 4 🆕 (API Layer)
 
 ## Overview
 
@@ -45,15 +45,54 @@ spike-rak/
 │   Data: Same 3 Thai/English/mixed docs from Phase 2 (reused corpus)
 │   Metrics: Recall@k, MRR, latency, cost, self-hostability, weighted scorecard
 │
-└── [Phase 3.5 🆕] LLM Provider Comparison ─────────────────────
-    benchmarks/llm-provider/evaluate.py
-      └─ BaseLLMProvider (ABC)
-          ├─ OpenRouterProvider      (6 models: gpt-4o, claude-3.5, gemini, llama, deepseek)
-          ├─ OpenAIDirectProvider    (gpt-4o, gpt-4o-mini)
-          ├─ AnthropicDirectProvider (claude-3.5-sonnet, claude-3-haiku)
-          └─ OllamaProvider          (self-hosted llama3.1:8b default)
-    Data: Same 3 docs (TF-IDF retrieval, no embedding model needed)
-    Metrics: Answer quality (F1), latency, cost, lock-in, self-hostability, weighted scorecard
+├── [Phase 3.5 🆕] LLM Provider Comparison ─────────────────────
+│   benchmarks/llm-provider/evaluate.py
+│     └─ BaseLLMProvider (ABC)
+│         ├─ OpenRouterProvider      (6 models: gpt-4o, claude-3.5, gemini, llama, deepseek)
+│         ├─ OpenAIDirectProvider    (gpt-4o, gpt-4o-mini)
+│         ├─ AnthropicDirectProvider (claude-3.5-sonnet, claude-3-haiku)
+│         └─ OllamaProvider          (self-hosted llama3.1:8b default)
+│   Data: Same 3 docs (TF-IDF retrieval, no embedding model needed)
+│   Metrics: Answer quality (F1), latency, cost, lock-in, self-hostability, weighted scorecard
+│
+└── [Phase 4 🆕] RAG API Layer ───────────────────────────────────────
+    api/main.py (FastAPI application)
+      Routes:
+        POST   /api/v1/auth/token           → JWT login (UserStore)
+        POST   /api/v1/chat/completions     → Permission-filtered RAG query
+        POST   /api/v1/documents/upload     → Store document in memory
+        GET    /api/v1/documents/search     → Search visible documents
+        POST   /api/v1/documents/index      → Trigger indexing
+        GET    /api/v1/documents/collections → List collections
+        GET    /api/v1/me                   → Current user info + permissions
+        POST   /api/v1/webhooks/line        → LINE Messaging API adapter
+    
+    Auth Layer (api/auth/):
+      ├─ models.py                    — User, UserType, Permission, AccessLevel
+      │                                 RBAC: role → permission set
+      │                                 Access matrix: role → visible access levels
+      ├─ jwt_handler.py               — Token encode/decode, password hashing
+      └─ dependencies.py              — FastAPI Depends() for auth + permissions
+    
+    RAG Pipeline (api/rag/):
+      ├─ models.py                    — Pydantic schemas (ChatRequest, ChatResponse, etc.)
+      ├─ retrieval.py                 — Permission-filtered vector search
+      │                                 _vector_search() simulates VectorDB with metadata filter
+      └─ pipeline.py                  — run_rag(): orchestrates retrieval + LLM call
+    
+    Document Store (api/store.py):
+      ├─ user_store                   — Dict[user_id, User] (5 PoC users)
+      ├─ password_store               — Dict[username, hashed_pwd] (PoC credentials)
+      └─ doc_store                    — List[Document] (5 sample docs with access_level)
+    
+    Channel Adapters:
+      └─ routes/webhooks/line.py      — LINE Messaging API signature validation + reply
+    
+    Design:
+      • Channel adapter pattern: LINE/Discord/Web → same ChatRequest/ChatResponse
+      • RBAC enforced at route level (Depends) and retrieval level (filter)
+      • Mock PoC store: replaces with PostgreSQL + Vector DB in production
+      • OpenAI-compatible LLM endpoint (OpenRouter/Anthropic/OpenAI direct)
 ```
 
 ## Phase 1 — VectorDBClient Interface
@@ -178,7 +217,12 @@ BaseLLMProvider (ABC)
 | `benchmarks/embedding-model/models/*.py` | 3 | Individual embedding model adapter |
 | `benchmarks/llm-provider/evaluate.py` | 3.5 | Provider evaluator, answer quality, weighted scorecard |
 | `benchmarks/llm-provider/providers/*.py` | 3.5 | Individual LLM provider adapter |
-| `Makefile` | 1-3.5 | `make benchmark-*`, `make rag-eval*`, `make embed-eval*`, `make llm-eval*` |
+| `api/main.py` | 4 | FastAPI app, route registration, OpenAPI schema |
+| `api/routes/auth_routes.py` | 4 | `/api/v1/auth/token` — JWT login |
+| `api/routes/chat.py` | 4 | `/api/v1/chat/completions` — RAG endpoint |
+| `api/routes/documents.py` | 4 | `/api/v1/documents/*` — document management |
+| `api/routes/webhooks/line.py` | 4 | `/api/v1/webhooks/line` — LINE adapter |
+| `Makefile` | 1-4 | `make benchmark-*`, `make rag-eval*`, `make embed-eval*`, `make llm-eval*`, `make api-run` |
 
 ## Anti-Lock-in Strategy
 
