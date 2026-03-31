@@ -1,8 +1,8 @@
-<!-- Generated: 2026-03-31 | Files scanned: 18 | Token estimate: ~900 -->
+<!-- Generated: 2026-03-31 | Files scanned: 20 | Token estimate: ~950 -->
 
 # Data Schema & Generation Codemap
 
-**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 + 3 🔄 + 3.5 🆕 + 4 🆕
+**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 + 3 🔄 + 3.5 🆕 + 4 🆕 + 5 🆕
 
 ---
 
@@ -543,3 +543,103 @@ ChatResponse with visible chunks + answer
 ```
 
 **Key principle:** Permission filtering happens BEFORE scoring, matching production vector DB filter semantics (not post-hoc filtering).
+
+---
+
+## Phase 5 — Integration Test Data
+
+### Test Fixtures (`tests/integration/conftest.py`)
+
+**Session-level fixtures (shared across all tests):**
+
+```python
+@fixture(scope="session")
+client: TestClient          # FastAPI in-process client (no server needed)
+
+@fixture(scope="session")
+employee_token: str         # JWT for bob_employee (emp123)
+
+@fixture(scope="session")
+customer_token: str         # JWT for carol_customer (cust123)
+
+@fixture(scope="session")
+admin_token: str            # JWT for alice_admin (admin123)
+```
+
+**Function-level fixtures (per test):**
+
+```python
+@fixture
+employee_headers: dict      # {"Authorization": "Bearer <token>"}
+
+@fixture
+customer_headers: dict      # {"Authorization": "Bearer <token>"}
+
+@fixture
+admin_headers: dict         # {"Authorization": "Bearer <token>"}
+
+@fixture
+clean_doc_store()           # Cleanup: restore doc_store to original length
+```
+
+### Test Scenarios Data
+
+**Scenario 1: Employee uploads & queries (2 tests)**
+- Test input: `leave_policy.txt` (unique marker text)
+- Expected: doc_id returned, appears in search results
+
+**Scenario 2: Customer access control (2 tests)**
+- Customer queries → only sees customer_kb docs
+- Employee queries → sees customer_kb + internal_kb docs
+- Admin queries → sees all access levels
+
+**Scenario 3: LINE webhook (3 tests)**
+- LINE signature validation (X-Line-Signature header)
+- Chat message reply (JSON → LINE message object)
+- Text parsing + LLM response
+
+**Scenario 4: Concurrent load (5 tests)**
+- 10 concurrent queries using ThreadPoolExecutor
+- Response consistency check (same question → same sources)
+- No 429 rate limit (if enforced)
+
+**Scenario 5: Component swap (4 tests)**
+- Mock LLM provider (deterministic answer)
+- Real provider fallback (if API key available)
+- Provider error handling (503 on timeout)
+
+**Scenario 6: Error handling (4 tests)**
+- LLM timeout → 503 Service Unavailable
+- Invalid auth → 401 Unauthorized
+- Malformed JSON → 422 Unprocessable Entity
+- Missing permission → 403 Forbidden
+
+**Scenario 7: Thai language E2E (3 tests)**
+- Thai query: "นโยบายการลาพักร้อนเป็นอย่างไร?"
+- Thai-only docs (hr_policy_th.md) in search
+- Thai answer from LLM (or mock)
+
+### Load Test Data (`tests/load/locustfile.py`)
+
+**User profiles:**
+
+```python
+class EmployeeUser(HttpUser):
+    weight = 3  # 3:1 employee:customer ratio
+    tasks:
+      - chat_query_en (4x): "what is the return policy?"
+      - chat_query_th (3x): "นโยบายการลาพักร้อนเป็นอย่างไร?"
+      - doc_search (2x): search?q=policy
+
+class CustomerUser(HttpUser):
+    weight = 1
+    tasks:
+      - chat_query_customer (2x): "How long is warranty?"
+      - faq_search (2x): search?q=warranty
+```
+
+**Load metrics captured:**
+- p50, p95, p99 latency (milliseconds)
+- Throughput (requests/second)
+- Error rate (failed requests)
+- Response size distribution

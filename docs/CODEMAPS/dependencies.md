@@ -1,8 +1,8 @@
-<!-- Generated: 2026-03-31 | Files scanned: 18 | Token estimate: ~950 -->
+<!-- Generated: 2026-03-31 | Files scanned: 22 | Token estimate: ~1050 -->
 
 # Dependencies & Infrastructure Codemap
 
-**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 + 3 🔄 + 3.5 🆕 + 4 🆕
+**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 + 3 🔄 + 3.5 🆕 + 4 🆕 + 5 🆕 (Integration Testing)
 
 ---
 
@@ -304,4 +304,53 @@ make api-test         # pytest tests/api/
 **Permission-Filtered Retrieval:**
 - VectorDB filter (production): metadata filter on insert (Qdrant `query_filter`)
 - PoC simulation: Python list comprehension filtering visible docs before scoring
-- Both enforce: access_level visibility BEFORE similarity scoring (secure-by-design) |
+- Both enforce: access_level visibility BEFORE similarity scoring (secure-by-design)
+
+---
+
+## Phase 5 — Python Packages
+
+**File:** `tests/requirements.txt`
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `pytest` | ≥8.3.0 | Test framework + fixtures |
+| `pytest-asyncio` | ≥0.25.0 | Async test support (for async endpoints) |
+| `httpx` | ≥0.28.0 | Async HTTP client (for TestClient) |
+| `locust` | ≥2.32.0 | Load testing framework (concurrent users) |
+
+**Installed via:** `make install-test` (installs both Phase 4 API + Phase 5 test deps)
+
+---
+
+## Phase 5 — Makefile Targets
+
+```bash
+make install-test                      # pip install api + tests/requirements.txt
+make test-integration                  # pytest tests/integration/ -v --tb=short
+make test-integration-verbose          # pytest tests/integration/ -v --tb=long (no capture)
+make load-test                         # Locust headless: 50 users, 30s (requires api-run)
+make load-test U=100 R=10 T=60s       # Override users, spawn rate, run-time
+```
+
+---
+
+## Phase 5 — Test Coverage
+
+**7 End-to-End Scenarios (27 tests):**
+
+| Scenario | Tests | Coverage |
+|----------|-------|----------|
+| 1. Employee uploads & queries | 2 | Document upload, search indexing |
+| 2. Customer access control | 2 | Permission-based doc visibility |
+| 3. LINE webhook → chat | 3 | Signature validation, message reply |
+| 4. Concurrent load | 5 | Rate limiting, response consistency |
+| 5. Component swap (LLM) | 4 | Mock vs real provider, fallbacks |
+| 6. Error handling | 4 | Timeout (503), connection errors, malformed input |
+| 7. Thai language E2E | 3 | Thai query → retrieval → answer |
+
+**Load Test (Locust):**
+- EmployeeUser (3x weight): 4 chat queries (En) + 3 chat queries (Th) + 2 doc searches per cycle
+- CustomerUser (1x weight): 2 chat queries (Customer FAQ) + 2 faq-search per cycle
+- Default: 50 users, spawn-rate 5/s, run 30s
+- Metrics: p50/p95/p99 latency, throughput, error rate

@@ -1,8 +1,8 @@
-<!-- Generated: 2026-03-31 | Files scanned: 58 | Token estimate: ~1200 -->
+<!-- Generated: 2026-03-31 | Files scanned: 62 | Token estimate: ~1350 -->
 
 # Architecture Codemap
 
-**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 + 3 🔄 + 3.5 🆕 + 4 🆕 (API Layer)
+**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 + 3 🔄 + 3.5 🆕 + 4 🆕 (API Layer) + 5 🆕 (Integration Tests)
 
 ## Overview
 
@@ -93,6 +93,34 @@ spike-rak/
       • RBAC enforced at route level (Depends) and retrieval level (filter)
       • Mock PoC store: replaces with PostgreSQL + Vector DB in production
       • OpenAI-compatible LLM endpoint (OpenRouter/Anthropic/OpenAI direct)
+      • Error handling: LLM timeout/connection → 503 Service Unavailable
+
+└── [Phase 5 🆕] Integration Testing ──────────────────────────────────
+    tests/integration/conftest.py (pytest fixtures)
+      ├─ @fixture client: FastAPI TestClient (in-process, no server needed)
+      ├─ @fixture employee_token: JWT for bob_employee
+      ├─ @fixture customer_token: JWT for carol_customer
+      ├─ @fixture admin_token: JWT for alice_admin
+      └─ @fixture clean_doc_store: cleanup after doc uploads
+    
+    tests/integration/test_scenarios.py (27 E2E tests, 7 scenarios)
+      1. Employee uploads document & queries it (2 tests)
+      2. Customer queries — sees only allowed docs (2 tests)
+      3. LINE user sends question & gets answer (3 tests)
+      4. Concurrent queries under load (5 tests)
+      5. Component swap test (LLM provider mock vs real) (4 tests)
+      6. Error handling — LLM timeout/connection (4 tests)
+      7. Thai language end-to-end pipeline (3 tests)
+    
+    tests/load/locustfile.py (load test)
+      ├─ EmployeeUser (3x weight): 4 chat-en + 3 chat-th + 2 doc-search tasks
+      └─ CustomerUser (1x weight): 2 chat-customer + 2 faq-search tasks
+    
+    Target metrics (from plan.md §9.2):
+      • p50 latency:       < 3s   (including LLM generation)
+      • p95 latency:       < 8s   (including LLM generation)
+      • Retrieval p95:     < 200ms (vector search only)
+      • Throughput:        > 50 req/sec
 ```
 
 ## Phase 1 — VectorDBClient Interface
@@ -219,10 +247,13 @@ BaseLLMProvider (ABC)
 | `benchmarks/llm-provider/providers/*.py` | 3.5 | Individual LLM provider adapter |
 | `api/main.py` | 4 | FastAPI app, route registration, OpenAPI schema |
 | `api/routes/auth_routes.py` | 4 | `/api/v1/auth/token` — JWT login |
-| `api/routes/chat.py` | 4 | `/api/v1/chat/completions` — RAG endpoint |
+| `api/routes/chat.py` | 4 | `/api/v1/chat/completions` — RAG endpoint (with error handling) |
 | `api/routes/documents.py` | 4 | `/api/v1/documents/*` — document management |
 | `api/routes/webhooks/line.py` | 4 | `/api/v1/webhooks/line` — LINE adapter |
-| `Makefile` | 1-4 | `make benchmark-*`, `make rag-eval*`, `make embed-eval*`, `make llm-eval*`, `make api-run` |
+| `tests/integration/conftest.py` | 5 | Pytest fixtures (TestClient, auth tokens) |
+| `tests/integration/test_scenarios.py` | 5 | 27 E2E tests across 7 scenarios |
+| `tests/load/locustfile.py` | 5 | Locust load test (EmployeeUser + CustomerUser) |
+| `Makefile` | 1-5 | `make test-integration`, `make load-test` |
 
 ## Anti-Lock-in Strategy
 

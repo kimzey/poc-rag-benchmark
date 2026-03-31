@@ -1,8 +1,8 @@
-<!-- Generated: 2026-03-31 | Files scanned: 45 | Token estimate: ~450 -->
+<!-- Generated: 2026-03-31 | Files scanned: 52 | Token estimate: ~480 -->
 
 # RAG Spike Codemaps Index
 
-**Last Updated:** 2026-03-31 | **Project Phase:** 1 ✅ Vector DB | 2 🔄 RAG Framework | 3 🔄 Embedding Models | 3.5 🆕 LLM Providers | 4 🆕 API Layer
+**Last Updated:** 2026-03-31 | **Project Phase:** 1 ✅ Vector DB | 2 🔄 RAG Framework | 3 🔄 Embedding Models | 3.5 🆕 LLM Providers | 4 🆕 API Layer | 5 🆕 Integration Testing
 
 ## Quick Navigation
 
@@ -83,6 +83,14 @@ spike-rak/
 │       │   └── ollama.py                # Self-hosted llama3.1:8b
 │       └── results/                     # llm_provider_results.json
 │
+├── tests/                                # [Phase 5 🆕] Integration testing
+│   ├── integration/
+│   │   ├── conftest.py                  # Pytest fixtures (TestClient, auth tokens)
+│   │   └── test_scenarios.py            # 27 E2E tests across 7 scenarios
+│   ├── load/
+│   │   └── locustfile.py                # Locust load test (EmployeeUser + CustomerUser)
+│   └── requirements.txt                 # pytest, locust, httpx, pytest-asyncio
+│
 ├── api/                                  # [Phase 4 🆕] FastAPI application
 │   ├── main.py                          # FastAPI app, route registration
 │   ├── config.py                        # Pydantic settings from .env
@@ -116,7 +124,7 @@ spike-rak/
 | 3 | Embedding Model Comparison | 🔄 Code done | `evaluate.py` + 5 model adapters (Thai/Eng) |
 | 3.5 | LLM Provider Comparison | 🆕 Code done | `evaluate.py` + 4 provider adapters (11 models) |
 | 4 | API Layer & Auth Design | 🆕 Code done | FastAPI + JWT + RBAC + Permission-Filtered Retrieval + LINE webhook |
-| 5 | Integration Testing | ⏳ Not started | End-to-end pipeline |
+| 5 | Integration Testing | 🆕 Code done | 27 E2E tests, 7 scenarios, Locust load testing |
 | 6 | RFC + Knowledge Sharing | ⏳ Not started | Final RFC document |
 
 ---
@@ -160,6 +168,14 @@ make api-run                               # Run on http://localhost:8000
 # Phase 4 (View API docs)
 # Visit: http://localhost:8000/docs (Swagger UI)
 #        http://localhost:8000/redoc (ReDoc)
+
+# Phase 5 (Integration testing)
+make install-test
+make test-integration              # 27 E2E tests, 7 scenarios
+
+# Phase 5 (Load testing — with running api-run)
+make load-test                     # Locust headless: 50 users, 30s
+locust -f tests/load/locustfile.py # Interactive UI at http://localhost:8089
 ```
 
 ### Phase 4 Example Flows
