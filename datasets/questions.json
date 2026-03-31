@@ -1,0 +1,72 @@
+[
+  {
+    "id": 1,
+    "question": "พนักงานทั่วไปมีวันลาพักร้อนกี่วันต่อปี?",
+    "category": "thai_hr",
+    "source_doc": "hr_policy_th.md",
+    "expected_answer": "พนักงานทั่วไปมีวันลาพักร้อน 10 วันต่อปี"
+  },
+  {
+    "id": 2,
+    "question": "พนักงานที่อายุงาน 4 ปีได้วันลาพักร้อนกี่วัน?",
+    "category": "thai_hr",
+    "source_doc": "hr_policy_th.md + faq_mixed.md",
+    "expected_answer": "พนักงานที่ทำงานครบ 3 ปีได้รับ 15 วัน ดังนั้นปีที่ 4 ยังได้ 15 วัน (20 วันเมื่อครบ 5 ปี)"
+  },
+  {
+    "id": 3,
+    "question": "ช่วงทดลองงาน (Probation) ใช้สิทธิ์ Work from Home ได้หรือไม่?",
+    "category": "thai_hr",
+    "source_doc": "hr_policy_th.md",
+    "expected_answer": "ไม่ได้ พนักงานในช่วงทดลองงานไม่มีสิทธิ์ WFH"
+  },
+  {
+    "id": 4,
+    "question": "OT วันหยุดได้รับค่าตอบแทนกี่เท่า และพนักงาน Senior ได้อะไรแทน?",
+    "category": "thai_hr",
+    "source_doc": "hr_policy_th.md",
+    "expected_answer": "OT วันหยุดได้รับ 3 เท่า พนักงาน Senior Grade 4+ ได้วันหยุดชดเชยแทนค่า OT"
+  },
+  {
+    "id": 5,
+    "question": "What is the rate limit for Customer tokens?",
+    "category": "english_api",
+    "source_doc": "tech_docs_en.md",
+    "expected_answer": "Customer tokens are limited to 30 requests per minute and 1,000 requests per day"
+  },
+  {
+    "id": 6,
+    "question": "What HTTP status code is returned when rate limit is exceeded?",
+    "category": "english_api",
+    "source_doc": "tech_docs_en.md",
+    "expected_answer": "429 Too Many Requests"
+  },
+  {
+    "id": 7,
+    "question": "How do I verify a webhook signature in Python?",
+    "category": "english_api",
+    "source_doc": "faq_mixed.md + tech_docs_en.md",
+    "expected_answer": "Use HMAC-SHA256 with the webhook secret and compare using hmac.compare_digest"
+  },
+  {
+    "id": 8,
+    "question": "วันลาป่วยติดต่อกัน 4 วันต้องทำอะไรบ้าง?",
+    "category": "thai_mixed",
+    "source_doc": "hr_policy_th.md + faq_mixed.md",
+    "expected_answer": "ต้องแนบใบรับรองแพทย์ เพราะลาป่วยติดต่อกัน 3 วันขึ้นไปต้องมีเอกสารยืนยัน"
+  },
+  {
+    "id": 9,
+    "question": "ระบบ Performance Review ใช้เครื่องมืออะไร และทำปีละกี่ครั้ง?",
+    "category": "thai_mixed",
+    "source_doc": "hr_policy_th.md + faq_mixed.md",
+    "expected_answer": "ใช้ Lattice ทำ Performance Review 2 ครั้งต่อปี (Mid-year และ Annual Review)"
+  },
+  {
+    "id": 10,
+    "question": "If my API key is compromised, what should I do first?",
+    "category": "english_security",
+    "source_doc": "faq_mixed.md",
+    "expected_answer": "Immediately notify #platform-oncall on Slack to request an emergency token revoke"
+  }
+]

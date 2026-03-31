@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Secrets
+.env
+
+# Results (large files, generated)
+benchmarks/vector-db/results/*.json
+benchmarks/rag-framework/results/*.json
+
+# Models (downloaded by sentence-transformers)
+.cache/
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/

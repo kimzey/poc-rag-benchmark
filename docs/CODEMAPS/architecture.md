@@ -1,122 +1,117 @@
-<!-- Generated: 2026-03-31 | Files scanned: 9 | Token estimate: ~650 -->
+<!-- Generated: 2026-03-31 | Files scanned: 29 | Token estimate: ~850 -->
 
 # Architecture Codemap
 
-**Last Updated:** 2026-03-31 | **Phase:** 1 (Vector DB Evaluation)
+**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 (RAG Framework Comparison)
 
 ## Overview
 
-RAG spike Phase 1 evaluates 4 vector databases using a **Port & Adapter pattern** to maximize portability. The benchmark measures indexing speed, query latency, filtering overhead, and recall accuracy across Qdrant, pgvector, Milvus, and OpenSearch.
+RAG spike เป็น research project แบบ multi-phase เพื่อ evaluate tech stack สำหรับ RAG system ใน production โดยใช้ **Port & Adapter pattern** ทั้งสองเฟสเพื่อป้องกัน vendor lock-in
 
 ## System Diagram
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│  run_benchmark.py                                       │
-│  ├─ Argument parsing (--db, --n, --skip)               │
-│  ├─ Dataset generation (10K-100K vectors)              │
-│  └─ Orchestration: connect → insert → search → measure │
-└─────────────────────────────────────────────────────────┘
-           │
-           ├─ (A) Synthetic Data Generation
-           │       dataset.py → unit-norm vectors (dim=1536)
-           │       metadata: access_level, category, source
-           │       ground truth: brute-force exact kNN (for recall)
-           │
-           ├─ (B) Port & Adapter Pattern [ANTI-LOCK-IN]
-           │
-           │   VectorDBClient (ABC)
-           │   ├─ name: str
-           │   ├─ connect() → None
-           │   ├─ create_collection(name) → None
-           │   ├─ insert(records[BenchmarkRecord]) → None
-           │   ├─ search(vector, top_k, filter?) → [SearchResult]
-           │   ├─ count() → int
-           │   └─ drop_collection() → None
-           │
-           │   Implementations:
-           │   ├─ QdrantAdapter    (Qdrant REST/gRPC)
-           │   ├─ PgvectorAdapter  (PostgreSQL + pgvector)
-           │   ├─ MilvusAdapter    (Milvus gRPC)
-           │   └─ OpenSearchAdapter (OpenSearch HTTP)
-           │
-           └─ (C) Metrics & Results
-                   metrics.py → LatencyStats, BenchmarkResult
-                   (p50, p95, p99 latency; QPS; recall@10)
+spike-rak/
+│
+├── [Phase 1 ✅] Vector DB Benchmark ──────────────────────────────
+│   benchmarks/vector-db/run_benchmark.py
+│     └─ VectorDBClient (ABC, 6 methods)
+│         ├─ QdrantAdapter       → localhost:6333
+│         ├─ PgvectorAdapter     → localhost:5433
+│         ├─ MilvusAdapter       → localhost:19530
+│         └─ OpenSearchAdapter   → localhost:9200
+│   Data: synthetic 10K–100K unit-norm vectors (dim=1536)
+│   Metrics: p50/p95/p99 latency, QPS, recall@10
+│
+└── [Phase 2 🔄] RAG Framework Comparison ─────────────────────────
+    benchmarks/rag-framework/evaluate.py
+      └─ BaseRAGPipeline (ABC)
+          ├─ BareMetalRAGPipeline   (numpy cosine + direct OpenRouter)
+          ├─ LlamaIndexRAGPipeline  (VectorStoreIndex, global Settings)
+          ├─ LangChainRAGPipeline   (FAISS, RetrievalQA chain)
+          └─ HaystackRAGPipeline    (DAG pipeline, InMemoryDocumentStore)
+    Data: Thai + English + Mixed documents (3 docs, 10 questions)
+    LLM: OpenRouter (configurable model)
+    Embeddings: sentence-transformers (local, no API key)
 ```
 
-## Key Design Patterns
+## Phase 1 — VectorDBClient Interface
 
-### 1. **Port & Adapter (Hexagonal Architecture)**
+**File:** `benchmarks/vector-db/clients/base.py`
 
-- **Port:** `VectorDBClient` abstract interface
-  - 6 required methods: connect, create_collection, insert, search, count, drop_collection
-  - Decouples benchmark logic from DB-specific implementations
-  - **Anti-lock-in benefit:** Swap backends without touching benchmark code
+```
+VectorDBClient (ABC)
+├─ connect() → None
+├─ create_collection(name) → None
+├─ insert(records: list[BenchmarkRecord]) → None
+├─ search(vector, top_k, filter?) → list[SearchResult]
+├─ count() → int
+└─ drop_collection() → None
+```
 
-- **Adapters:** 4 concrete implementations
-  - Each adapter translates BenchmarkRecord → DB schema
-  - Each adapter translates DB response → SearchResult
-  - Can drop/add adapters with zero changes to orchestrator
+Data flow: `generate_dataset(n)` → `insert()` → `search() × 100` → `LatencyStats`
 
-### 2. **Synthetic Data with Metadata**
+## Phase 2 — BaseRAGPipeline Interface
 
-- Vectors: unit-normalized Gaussian (shape: N × 1536)
-- Metadata fields (test permission filtering):
-  - `access_level`: public (50%) | internal (35%) | confidential (15%)
-  - `category`: tech (40%) | hr (20%) | finance (20%) | ops (20%)
-  - `source`: doc_{id} (traceability)
+**File:** `benchmarks/rag-framework/base.py`
 
-### 3. **Filtered Search Overhead Measurement**
+```
+BaseRAGPipeline (ABC)
+├─ build_index(doc_paths: list[str]) → IndexStats
+│   # chunk → embed (sentence-transformers local) → store in-memory
+├─ query(question: str, top_k=3) → RAGResult
+│   # embed query → cosine retrieve → LLM generate via OpenRouter
+└─ loc → int  # non-blank lines in pipeline.py (boilerplate metric)
+```
 
-Benchmarks include both:
-1. **ANN search** (no filter) → baseline latency
-2. **Filtered ANN** (access_level=internal) → production-realistic overhead
+### Framework Implementations
 
-Both measure p50/p95/p99 latency & QPS.
+| Framework | Vector Store | Chunker | LLM Setup |
+|-----------|-------------|---------|-----------|
+| `bare_metal` | numpy dot product | word splitter (custom) | `openai.OpenAI(base_url=openrouter)` |
+| `llamaindex` | VectorStoreIndex (RAM) | SentenceSplitter | `LlamaOpenAI(api_base=openrouter)` via global Settings |
+| `langchain` | FAISS (RAM) | RecursiveCharacterTextSplitter | `ChatOpenAI(openai_api_base=openrouter)` |
+| `haystack` | InMemoryDocumentStore | word splitter (custom) | `OpenAIGenerator(api_base_url=openrouter)` |
+
+### Phase 2 Evaluation Metrics
+
+| Metric | How Measured |
+|--------|-------------|
+| Indexing time (ms) | `time.perf_counter()` around `build_index()` |
+| Query latency (ms) | `time.perf_counter()` around `query()` |
+| Non-blank LOC | `pipeline.loc` property counts non-comment lines |
+| Component swap-ability | Manual 3-axis assessment (LLM / VectorDB / Embedder) |
 
 ## Entry Points
 
-| File | Purpose | Responsibility |
-|------|---------|-----------------|
-| `run_benchmark.py` | Benchmark orchestrator | Argument parsing, client selection, summary reporting |
-| `clients/base.py` | Abstract interface | Defines VectorDBClient protocol + data classes |
-| `clients/{qdrant,pgvector,milvus,opensearch}.py` | Adapters | DB-specific connection, schema, query translation |
-| `utils/dataset.py` | Data generation | Synthetic vectors + metadata, brute-force ground truth |
-| `utils/metrics.py` | Measurement | Latency stats, recall computation, JSON export |
+| File | Phase | Responsibility |
+|------|-------|----------------|
+| `benchmarks/vector-db/run_benchmark.py` | 1 | Benchmark orchestrator, CLI args |
+| `benchmarks/rag-framework/evaluate.py` | 2 | Framework evaluator, comparison tables |
+| `benchmarks/rag-framework/frameworks/*/pipeline.py` | 2 | Individual framework PoC |
+| `Makefile` | Both | `make benchmark-*`, `make rag-eval*` |
 
-## Data Flow
+## Anti-Lock-in Strategy
 
-1. **Generate** → `generate_dataset(n)` → list[BenchmarkRecord]
-2. **Generate queries** → `generate_queries(n)` → list[vector]
-3. **Ground truth** → `compute_ground_truth()` → list[set[doc_ids]] (only for n ≤ 50K)
-4. **For each DB:**
-   - Client instantiation (host/port from defaults)
-   - `connect()` → establish connection
-   - `create_collection()` → schema + indexes
-   - `insert(dataset)` → measure index throughput
-   - `search(query, top_k=10, filter?)` → measure latency (100 runs)
-   - `count()` → verify insertion
-   - `drop_collection()` → cleanup
-5. **Summarize** → Rich table: DB, vectors, latency percentiles, QPS, recall
-
-## Related Files
-
-- `Makefile` — Build targets: `up-db`, `benchmark-quick`, `benchmark-all`
-- `docker-compose.vector-db.yml` — Container definitions (5 services + 2 etcd/minio deps)
-- `plan.md` — Full 6-phase spike research plan
-- `benchmarks/vector-db/results/` — JSON output of each run (timestamped)
-
----
+Both phases apply the same pattern:
+- **Port:** Abstract base class (`VectorDBClient`, `BaseRAGPipeline`)
+- **Adapter:** One concrete class per vendor/framework
+- **Rule:** Swap component = change 1 class, zero orchestrator changes
 
 ## Extension Points
 
-To add a new vector DB:
+**Add new Vector DB (Phase 1):**
+1. `clients/mydb.py` inheriting `VectorDBClient`
+2. Add to `CLIENTS_MAP` in `run_benchmark.py`
+3. Add Docker service to `docker-compose.vector-db.yml`
 
-1. Create `clients/mynewdb.py` inheriting from `VectorDBClient`
-2. Implement 6 required methods
-3. Add to `CLIENTS_MAP` in `run_benchmark.py`
-4. Add Docker service to `docker-compose.vector-db.yml`
-5. Test: `python run_benchmark.py --db mynewdb`
+**Add new RAG Framework (Phase 2):**
+1. `frameworks/myfw/pipeline.py` inheriting `BaseRAGPipeline`
+2. Add to `FRAMEWORK_REGISTRY` in `evaluate.py`
+3. No changes to evaluator logic
 
-No changes to orchestrator logic needed.
+## Related Files
+
+- `plan.md` — Full 6-phase spike plan (Phases 3–6 not yet started)
+- `datasets/` — Thai/English/Mixed test documents for Phase 2
+- `.env.example` — Environment variables template

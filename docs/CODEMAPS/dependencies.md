@@ -1,231 +1,133 @@
-<!-- Generated: 2026-03-31 | Files scanned: 2 | Token estimate: ~420 -->
+<!-- Generated: 2026-03-31 | Files scanned: 4 | Token estimate: ~500 -->
 
 # Dependencies & Infrastructure Codemap
 
-**Last Updated:** 2026-03-31 | **Phase:** 1 (Vector DB Evaluation)
-
-## Python Packages
-
-**File:** `benchmarks/vector-db/requirements.txt`
-
-### Vector DB Clients
-
-| Package | Version | Purpose | Adapter | Usage |
-|---------|---------|---------|---------|-------|
-| `qdrant-client` | ≥1.9.0 | Qdrant SDK | QdrantAdapter | REST API + gRPC to Qdrant |
-| `psycopg2-binary` | ≥2.9.9 | PostgreSQL adapter | PgvectorAdapter | JDBC-like connection pool |
-| `pgvector` | ≥0.2.5 | PostgreSQL vector type | PgvectorAdapter | Serialize vectors in SQL |
-| `pymilvus` | ≥2.4.0 | Milvus SDK | MilvusAdapter | gRPC connection + schema API |
-| `opensearch-py` | ≥2.5.0 | OpenSearch SDK | OpenSearchAdapter | HTTP bulk indexing + search |
-
-### Utilities
-
-| Package | Version | Purpose | Used By |
-|---------|---------|---------|---------|
-| `numpy` | ≥1.26.0 | Numerical computation | dataset.py (vector gen, ground truth) |
-| `tqdm` | ≥4.66.0 | Progress bars | (optional, not currently used) |
-| `rich` | ≥13.7.0 | Terminal UI | run_benchmark.py (tables, colors, spinners) |
-| `python-dotenv` | ≥1.0.0 | Environment config | (optional, for .env override) |
-
-**Total:** 12 packages (5 DB clients + 4 utilities + 3 deps)
-
-## Docker Infrastructure
-
-**File:** `docker/docker-compose.vector-db.yml`
-
-All services accessible on `localhost`:
-
-### Qdrant
-
-```yaml
-Image:         qdrant/qdrant:v1.9.2
-Container:     spike_qdrant
-Ports:         6333 (REST), 6334 (gRPC)
-Storage:       qdrant_data/
-Healthcheck:   curl http://localhost:6333/healthz
-```
-
-**Adapter config:** `QdrantAdapter(host="localhost", port=6333)`
-
-### PostgreSQL + pgvector
-
-```yaml
-Image:         pgvector/pgvector:pg16
-Container:     spike_pgvector
-Ports:         5433 (local) → 5432 (container)
-Database:      vectordb
-Credentials:   user=spike, password=spike
-Storage:       pgvector_data/
-Healthcheck:   pg_isready -U spike -d vectordb
-```
-
-**Adapter config:** `PgvectorAdapter(host="localhost", port=5433, ...)`
-
-**Schema example:**
-```sql
-CREATE TABLE spike_benchmark (
-    id          BIGINT PRIMARY KEY,
-    embedding   vector(1536),
-    access_level TEXT,
-    category    TEXT,
-    source      TEXT
-);
-CREATE INDEX USING hnsw (embedding vector_cosine_ops);
-```
-
-### Milvus
-
-**Dependency tree:**
-```
-Milvus ←── etcd (coordination)
-       ←── minio (object storage)
-```
-
-```yaml
-Milvus:
-  Image:     milvusdb/milvus:v2.4.5
-  Container: spike_milvus
-  Ports:     19530 (gRPC), 9091 (metrics)
-  Depends:   etcd (healthy), minio (healthy)
-  Storage:   milvus_data/
-
-etcd:
-  Image:     quay.io/coreos/etcd:v3.5.5
-  Container: spike_etcd
-  Port:      2379 (internal only)
-  Storage:   etcd_data/
-
-minio:
-  Image:     minio/minio:2023-03-20
-  Container: spike_minio
-  Port:      9000 (API), 9001 (console)
-  Storage:   minio_data/
-```
-
-**Adapter config:** `MilvusAdapter(host="localhost", port=19530)`
-
-### OpenSearch
-
-```yaml
-Image:         opensearchproject/opensearch:2.13.0
-Container:     spike_opensearch
-Ports:         9200 (API), 9600 (performance analyzer)
-Storage:       opensearch_data/
-Memory:        512m min/max (configurable)
-Features:      KNN plugin, security disabled (dev only)
-Healthcheck:   curl http://localhost:9200/_cluster/health
-```
-
-**Adapter config:** `OpenSearchAdapter(host="localhost", port=9200)`
-
-## Volume Management
-
-Persistent storage for all services:
-
-| Volume | Service | Mount Point |
-|--------|---------|-------------|
-| `qdrant_data` | Qdrant | /qdrant/storage |
-| `pgvector_data` | PostgreSQL | /var/lib/postgresql/data |
-| `etcd_data` | etcd | /etcd |
-| `minio_data` | MinIO | /minio_data |
-| `milvus_data` | Milvus | /var/lib/milvus |
-| `opensearch_data` | OpenSearch | /usr/share/opensearch/data |
-
-**Cleanup:**
-```bash
-make down-db    # docker compose down -v (removes all volumes)
-```
-
-## Build & Run Commands
-
-**Install Python dependencies:**
-```bash
-make install
-# → pip install -r benchmarks/vector-db/requirements.txt
-```
-
-**Start all vector DBs:**
-```bash
-make up-db
-# → docker compose -f docker/docker-compose.vector-db.yml up -d
-```
-
-**Start single DB (e.g., Qdrant):**
-```bash
-make up-db DB=qdrant
-```
-
-**Run benchmark:**
-```bash
-make benchmark-quick              # 10K vectors (≈30s)
-make benchmark-medium             # 100K vectors (≈3min)
-make benchmark-all                # both
-make benchmark-db DB=qdrant N=50000  # custom
-```
-
-**Stop & cleanup:**
-```bash
-make down-db    # Stop containers + remove volumes
-```
-
-**View logs:**
-```bash
-make logs-db              # All services
-make logs-db DB=qdrant    # Single service
-```
-
-## Hardware Requirements
-
-Tested on:
-- **CPU:** 4+ cores
-- **RAM:** 8GB+ (Milvus + OpenSearch require ≥2GB each)
-- **Disk:** 10GB+ (for volumes)
-
-**Estimated runtime:**
-- 10K vectors: 20–40s (all adapters)
-- 100K vectors: 2–5min (all adapters)
-
-## Network Topology
-
-```
-localhost:6333 ←→ Qdrant
-localhost:5433 ←→ PostgreSQL
-localhost:19530 ←→ Milvus (gRPC)
-localhost:9200 ←→ OpenSearch (HTTP)
-
-Internal (not exposed):
-localhost:2379 ← etcd (Milvus only)
-localhost:9000 ← MinIO (Milvus only)
-```
-
-All services isolated in Docker network. Use service names (`qdrant`, `milvus`, etc.) for container-to-container communication.
-
-## Environment Variables
-
-Optional `.env` file (loaded by python-dotenv):
-
-```bash
-# Override defaults
-QDRANT_HOST=localhost
-QDRANT_PORT=6333
-
-PGVECTOR_HOST=localhost
-PGVECTOR_PORT=5433
-PGVECTOR_USER=spike
-PGVECTOR_PASSWORD=spike
-
-MILVUS_HOST=localhost
-MILVUS_PORT=19530
-
-OPENSEARCH_HOST=localhost
-OPENSEARCH_PORT=9200
-```
-
-Currently hardcoded in adapters; .env support is placeholder for Phase 2.
+**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄
 
 ---
 
-**Next Steps (Phase 2+):**
-- Cloud deployments (AWS, GCP managed vector services)
-- Kubernetes ingress (if scale testing added)
-- Secrets management (vault, AWS Secrets Manager)
+## Phase 1 — Python Packages
+
+**File:** `benchmarks/vector-db/requirements.txt`
+
+| Package | Version | Purpose | Adapter |
+|---------|---------|---------|---------|
+| `qdrant-client` | ≥1.9.0 | Qdrant SDK | QdrantAdapter |
+| `psycopg2-binary` | ≥2.9.9 | PostgreSQL | PgvectorAdapter |
+| `pgvector` | ≥0.2.5 | PG vector type | PgvectorAdapter |
+| `pymilvus` | ≥2.4.0 | Milvus gRPC | MilvusAdapter |
+| `opensearch-py` | ≥2.5.0 | OpenSearch HTTP | OpenSearchAdapter |
+| `numpy` | ≥1.26.0 | Vector math, ground truth | dataset.py |
+| `rich` | ≥13.7.0 | Terminal tables | run_benchmark.py |
+| `tqdm` | ≥4.66.0 | Progress bars | optional |
+| `python-dotenv` | ≥1.0.0 | Env config | optional |
+
+---
+
+## Phase 2 — Python Packages
+
+**File:** `benchmarks/rag-framework/requirements.txt`
+
+### Core
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `openai` | ≥1.30.0 | OpenRouter client (OpenAI-compatible) |
+| `sentence-transformers` | ≥3.0.0 | Local embeddings (no API key) |
+| `torch` | ≥2.0.0 | Backend for sentence-transformers |
+| `python-dotenv` | ≥1.0.0 | Load `.env` |
+| `rich` | ≥13.7.0 | Comparison tables |
+| `numpy` | ≥1.26.0 | Cosine similarity (bare_metal) |
+
+### RAG Frameworks
+| Package | Framework | Purpose |
+|---------|-----------|---------|
+| `llama-index-core` ≥0.11 | LlamaIndex | Core: VectorStoreIndex, SimpleDirectoryReader |
+| `llama-index-llms-openai` ≥0.3 | LlamaIndex | OpenRouter via OpenAI-compat LLM |
+| `llama-index-embeddings-huggingface` ≥0.3 | LlamaIndex | sentence-transformers bridge |
+| `langchain` ≥0.3 | LangChain | Core chain primitives |
+| `langchain-community` ≥0.3 | LangChain | FAISS, TextLoader |
+| `langchain-openai` ≥0.2 | LangChain | ChatOpenAI → OpenRouter |
+| `langchain-huggingface` ≥0.1 | LangChain | HuggingFaceEmbeddings |
+| `faiss-cpu` ≥1.8.0 | LangChain | In-memory vector store |
+| `haystack-ai` ≥2.5.0 | Haystack | Full Haystack v2 (InMemory + pipelines) |
+
+---
+
+## Phase 2 — External Services
+
+| Service | Auth | Used By | Notes |
+|---------|------|---------|-------|
+| **OpenRouter** | `OPENROUTER_API_KEY` | All 4 frameworks | OpenAI-compatible, `base_url=https://openrouter.ai/api/v1` |
+| sentence-transformers model | None | All 4 frameworks | Downloaded from HuggingFace Hub on first run, cached locally |
+
+Default model: `anthropic/claude-3-haiku` (fast + cheap for spike)
+
+---
+
+## Phase 1 — Docker Infrastructure
+
+**File:** `docker/docker-compose.vector-db.yml`
+
+| Service | Image | Ports | Depends On |
+|---------|-------|-------|-----------|
+| `qdrant` | qdrant/qdrant:v1.9.2 | 6333 (REST), 6334 (gRPC) | — |
+| `pgvector` | pgvector/pgvector:pg16 | 5433→5432 | — |
+| `milvus` | milvusdb/milvus:v2.4.5 | 19530 (gRPC), 9091 | etcd, minio |
+| `opensearch` | opensearchproject/opensearch:2.13.0 | 9200, 9600 | — |
+| `etcd` | quay.io/coreos/etcd:v3.5.5 | internal | — |
+| `minio` | minio/minio:2023-03-20 | 9000, 9001 | — |
+
+**Volumes:** `qdrant_data`, `pgvector_data`, `etcd_data`, `minio_data`, `milvus_data`, `opensearch_data`
+
+---
+
+## Makefile Targets
+
+### Phase 1
+```bash
+make install            # pip install benchmarks/vector-db/requirements.txt
+make up-db              # docker compose up -d (all DBs)
+make up-db DB=qdrant    # single DB
+make down-db            # docker compose down -v
+make benchmark-quick    # 10K vectors
+make benchmark-medium   # 100K vectors
+make benchmark-all      # both
+make benchmark-db DB=qdrant N=50000
+```
+
+### Phase 2
+```bash
+make install-rag                       # pip install rag-framework/requirements.txt
+make rag-eval                          # all 4 frameworks (needs OPENROUTER_API_KEY)
+make rag-eval-no-llm                   # indexing only, no API key needed
+make rag-eval-framework F=bare_metal   # single framework
+```
+
+---
+
+## Environment Variables
+
+**File:** `.env.example`
+
+```bash
+# Phase 2 (LLM)
+OPENROUTER_API_KEY=sk-or-...
+RAG_LLM_MODEL=anthropic/claude-3-haiku
+
+# Phase 2 (Embeddings — local, no key needed)
+RAG_EMBEDDING_MODEL=all-MiniLM-L6-v2    # fast; use multilingual-e5-small for Thai
+
+# Phase 2 (Tuning)
+RAG_CHUNK_SIZE=500
+RAG_CHUNK_OVERLAP=50
+RAG_TOP_K=3
+```
+
+---
+
+## Hardware Requirements
+
+| Phase | CPU | RAM | Disk | Note |
+|-------|-----|-----|------|------|
+| Phase 1 | 4+ cores | 8GB+ | 10GB+ | Milvus + OpenSearch need ≥2GB each |
+| Phase 2 | 2+ cores | 4GB+ | 1GB+ | sentence-transformers model ~80–500MB |

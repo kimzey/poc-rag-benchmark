@@ -1,0 +1,29 @@
+"""Shared configuration for Phase 2 RAG Framework benchmark."""
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# ── LLM via OpenRouter ────────────────────────────────────────────────────────
+OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
+OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
+LLM_MODEL: str = os.getenv("RAG_LLM_MODEL", "anthropic/claude-3-haiku")
+
+# ── Embedding (sentence-transformers, runs locally, no key needed) ─────────────
+# all-MiniLM-L6-v2   → fast, English-focused, small (80MB)
+# intfloat/multilingual-e5-small → Thai+English, small (470MB) — Phase 3 will compare
+EMBEDDING_MODEL: str = os.getenv("RAG_EMBEDDING_MODEL", "all-MiniLM-L6-v2")
+
+# ── Chunking ──────────────────────────────────────────────────────────────────
+CHUNK_SIZE: int = int(os.getenv("RAG_CHUNK_SIZE", "500"))
+CHUNK_OVERLAP: int = int(os.getenv("RAG_CHUNK_OVERLAP", "50"))
+
+# ── Retrieval ─────────────────────────────────────────────────────────────────
+TOP_K: int = int(os.getenv("RAG_TOP_K", "3"))
+
+# ── Paths ─────────────────────────────────────────────────────────────────────
+BENCHMARK_DIR: Path = Path(__file__).parent
+DATASETS_DIR: Path = BENCHMARK_DIR.parent.parent / "datasets"
+RESULTS_DIR: Path = BENCHMARK_DIR / "results"
