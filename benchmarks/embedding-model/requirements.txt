@@ -1,0 +1,11 @@
+# ── Core ──────────────────────────────────────────────────────────────────────
+python-dotenv>=1.0.0
+numpy>=1.26.0
+rich>=13.7.0
+
+# ── Open-source embedding models (sentence-transformers backend) ───────────────
+sentence-transformers>=3.0.0
+torch>=2.0.0
+
+# ── Commercial embedding models (optional — requires API keys in .env) ─────────
+openai>=1.30.0        # text-embedding-3-large / text-embedding-3-small

@@ -2,7 +2,7 @@
 
 # Architecture Codemap
 
-**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 (RAG Framework Comparison)
+**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 + 3 🔄 (Embedding Models)
 
 ## Overview
 
@@ -23,16 +23,27 @@ spike-rak/
 │   Data: synthetic 10K–100K unit-norm vectors (dim=1536)
 │   Metrics: p50/p95/p99 latency, QPS, recall@10
 │
-└── [Phase 2 🔄] RAG Framework Comparison ─────────────────────────
-    benchmarks/rag-framework/evaluate.py
-      └─ BaseRAGPipeline (ABC)
-          ├─ BareMetalRAGPipeline   (numpy cosine + direct OpenRouter)
-          ├─ LlamaIndexRAGPipeline  (VectorStoreIndex, global Settings)
-          ├─ LangChainRAGPipeline   (FAISS, RetrievalQA chain)
-          └─ HaystackRAGPipeline    (DAG pipeline, InMemoryDocumentStore)
-    Data: Thai + English + Mixed documents (3 docs, 10 questions)
-    LLM: OpenRouter (configurable model)
-    Embeddings: sentence-transformers (local, no API key)
+├── [Phase 2 🔄] RAG Framework Comparison ─────────────────────────
+│   benchmarks/rag-framework/evaluate.py
+│     └─ BaseRAGPipeline (ABC)
+│         ├─ BareMetalRAGPipeline   (numpy cosine + direct OpenRouter)
+│         ├─ LlamaIndexRAGPipeline  (VectorStoreIndex, global Settings)
+│         ├─ LangChainRAGPipeline   (FAISS, RetrievalQA chain)
+│         └─ HaystackRAGPipeline    (DAG pipeline, InMemoryDocumentStore)
+│   Data: Thai + English + Mixed documents (3 docs, 10 questions)
+│   LLM: OpenRouter (configurable model)
+│   Embeddings: sentence-transformers (local, no API key)
+│
+└── [Phase 3 🔄] Embedding Model Comparison ─────────────────────
+    benchmarks/embedding-model/evaluate.py
+      └─ BaseEmbeddingModel (ABC)
+          ├─ BGEM3Model            (BAAI/bge-m3, multilingual)
+          ├─ MultilingualE5LargeModel  (intfloat/multilingual-e5-large, query/passage prefix)
+          ├─ MxbaiEmbedLargeModel      (mixedbread-ai/mxbai-embed-large-v1)
+          ├─ OpenAILargeModel      (text-embedding-3-large)
+          └─ OpenAISmallModel      (text-embedding-3-small)
+    Data: Same 3 Thai/English/mixed docs from Phase 2 (reused corpus)
+    Metrics: Recall@k, MRR, latency, cost, self-hostability, weighted scorecard
 ```
 
 ## Phase 1 — VectorDBClient Interface
@@ -82,6 +93,37 @@ BaseRAGPipeline (ABC)
 | Non-blank LOC | `pipeline.loc` property counts non-comment lines |
 | Component swap-ability | Manual 3-axis assessment (LLM / VectorDB / Embedder) |
 
+## Phase 3 — BaseEmbeddingModel Interface
+
+**File:** `benchmarks/embedding-model/base.py`
+
+```
+BaseEmbeddingModel (ABC)
+├─ encode(texts: list[str]) → EmbedResult
+│   # L2-normalize embeddings, track latency_ms
+└─ meta → ModelMeta
+   # Static facts: dimensions, max_tokens, cost, vendor_lock_in, self_hostable
+```
+
+### Phase 3 Evaluation Metrics
+
+| Metric | How Measured | Higher/Lower |
+|--------|-------------|--------------|
+| Thai Recall@k | % questions with GT chunk in top-k | Higher |
+| Eng Recall@k | % English questions with GT chunk in top-k | Higher |
+| MRR | Mean Reciprocal Rank (avg 1/position) | Higher |
+| Query Latency (ms) | `time.perf_counter()` for single query encode | Lower |
+| Index Latency (ms) | Time to encode all corpus chunks | Lower |
+| Cost/1M tokens | USD; 0.0 for open-source | Lower |
+| Self-hostable | bool (local download vs API-only) | Higher |
+| Vendor Lock-in | 0 (fully open) to 10 (proprietary) | Lower |
+| Dimensions | Embedding vector size | Lower (storage) |
+| Max Tokens | Context length; input chunk limit | Higher |
+
+**Ground Truth:** Token overlap (Jaccard) of question's expected_answer vs corpus chunks
+
+**Weighted Scorecard:** Thai 25% · Eng 15% · Latency 15% · Cost 15% · Self-host 10% · Dims 5% · MaxTok 5% · Lock-in 10%
+
 ## Entry Points
 
 | File | Phase | Responsibility |
@@ -89,7 +131,9 @@ BaseRAGPipeline (ABC)
 | `benchmarks/vector-db/run_benchmark.py` | 1 | Benchmark orchestrator, CLI args |
 | `benchmarks/rag-framework/evaluate.py` | 2 | Framework evaluator, comparison tables |
 | `benchmarks/rag-framework/frameworks/*/pipeline.py` | 2 | Individual framework PoC |
-| `Makefile` | Both | `make benchmark-*`, `make rag-eval*` |
+| `benchmarks/embedding-model/evaluate.py` | 3 | Model evaluator, retrieval quality, weighted scorecard |
+| `benchmarks/embedding-model/models/*.py` | 3 | Individual embedding model adapter |
+| `Makefile` | 1-3 | `make benchmark-*`, `make rag-eval*`, `make embed-eval*` |
 
 ## Anti-Lock-in Strategy
 
@@ -110,8 +154,15 @@ Both phases apply the same pattern:
 2. Add to `FRAMEWORK_REGISTRY` in `evaluate.py`
 3. No changes to evaluator logic
 
+**Add new Embedding Model (Phase 3):**
+1. `models/mymodel.py` inheriting `BaseEmbeddingModel`
+2. Implement `_encode_raw()` and `meta` property
+3. Add to `MODEL_REGISTRY` in `evaluate.py`
+4. For query/passage prefix models: add `encode_queries()` / `encode_passages()` methods
+
 ## Related Files
 
-- `plan.md` — Full 6-phase spike plan (Phases 3–6 not yet started)
-- `datasets/` — Thai/English/Mixed test documents for Phase 2
+- `plan.md` — Full 6-phase spike plan (Phases 4–6 not yet started)
+- `datasets/` — Thai/English/Mixed test documents (reused Phases 2–3)
 - `.env.example` — Environment variables template
+- `benchmarks/embedding-model/results/` — JSON output with rankings

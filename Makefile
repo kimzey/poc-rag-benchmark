@@ -1,9 +1,11 @@
 .PHONY: help up-db down-db install benchmark-quick benchmark-medium benchmark-all \
-        install-rag rag-eval rag-eval-framework rag-eval-no-llm
+        install-rag rag-eval rag-eval-framework rag-eval-no-llm \
+        install-embed embed-eval embed-eval-all embed-eval-model
 
-DOCKER_COMPOSE = docker compose -f docker/docker-compose.vector-db.yml
-BENCH_DIR      = benchmarks/vector-db
-RAG_BENCH_DIR  = benchmarks/rag-framework
+DOCKER_COMPOSE  = docker compose -f docker/docker-compose.vector-db.yml
+BENCH_DIR       = benchmarks/vector-db
+RAG_BENCH_DIR   = benchmarks/rag-framework
+EMBED_BENCH_DIR = benchmarks/embedding-model
 
 help:
 	@echo ""
@@ -23,6 +25,14 @@ help:
 	@echo "  make rag-eval                   Run all 4 frameworks (requires OPENROUTER_API_KEY)"
 	@echo "  make rag-eval-no-llm            Run indexing only (no API key needed)"
 	@echo "  make rag-eval-framework F=name  Run single framework (bare_metal|llamaindex|langchain|haystack)"
+	@echo ""
+	@echo "  Phase 3 — Embedding Model Comparison"
+	@echo "  ──────────────────────────────────────"
+	@echo "  make install-embed              Install Python deps for Phase 3"
+	@echo "  make embed-eval                 Run open-source models (no API key needed)"
+	@echo "  make embed-eval-all             Run all models (requires OPENAI_API_KEY for OpenAI)"
+	@echo "  make embed-eval-model M=name    Run single model (bge_m3|multilingual_e5|mxbai|openai_large|openai_small)"
+	@echo "  make embed-eval-topk K=5        Override top-k (default: 3)"
 	@echo ""
 
 up-db:
@@ -72,3 +82,20 @@ rag-eval-no-llm:
 
 rag-eval-framework:
 	cd $(RAG_BENCH_DIR) && python evaluate.py --frameworks $(F)
+
+# ── Phase 3: Embedding Model ──────────────────────────────────────────────────
+
+install-embed:
+	pip install -r $(EMBED_BENCH_DIR)/requirements.txt
+
+embed-eval:
+	cd $(EMBED_BENCH_DIR) && python evaluate.py
+
+embed-eval-all:
+	cd $(EMBED_BENCH_DIR) && python evaluate.py --models all
+
+embed-eval-model:
+	cd $(EMBED_BENCH_DIR) && python evaluate.py --models $(M)
+
+embed-eval-topk:
+	cd $(EMBED_BENCH_DIR) && python evaluate.py --top-k $(or $(K),5)

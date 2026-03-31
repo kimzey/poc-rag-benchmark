@@ -1,8 +1,8 @@
-<!-- Generated: 2026-03-31 | Files scanned: 7 | Token estimate: ~550 -->
+<!-- Generated: 2026-03-31 | Files scanned: 10 | Token estimate: ~650 -->
 
 # Data Schema & Generation Codemap
 
-**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄
+**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 + 3 🔄
 
 ---
 
@@ -180,3 +180,108 @@ Results saved as `rag_framework_results.json`:
   ]
 }
 ```
+
+---
+
+## Phase 3 — Embedding Model Benchmark Data
+
+### EmbedResult
+
+```python
+@dataclass
+class EmbedResult:
+    embeddings: np.ndarray      # shape (n, dims), L2-normalized
+    latency_ms: float           # total wall time
+```
+
+### ModelMeta
+
+```python
+@dataclass
+class ModelMeta:
+    name: str                           # e.g. "BAAI/bge-m3"
+    dimensions: int                     # embedding vector size
+    max_tokens: int                     # context length
+    cost_per_1m_tokens: float          # USD; 0.0 for open-source
+    vendor_lock_in: int                # 0 (open) to 10 (locked)
+    self_hostable: bool                # Can run locally
+```
+
+### Corpus — Phase 3 Reuses Phase 2 Documents
+
+Same 3 documents (hr_policy_th.md, tech_docs_en.md, faq_mixed.md), chunked with chunk_size=500, overlap=50
+
+Corpus: ~42 chunks across 3 documents (same as Phase 2)
+
+### Test Questions
+
+Same 10 questions from Phase 2 questions.json:
+- Thai HR (2)
+- Thai HR (2)
+- English API (2)
+- English API (1 with cross-doc)
+- Thai Mixed (2)
+- English Security (1)
+
+**Ground truth:** Token overlap (Jaccard) of expected_answer vs corpus chunks
+
+### Query Result Structure (Phase 3)
+
+```json
+{
+  "id": 1,
+  "question": "...",
+  "category": "thai_hr",
+  "gt_chunk_idx": 5,
+  "hit_at_k": true,
+  "reciprocal_rank": 0.5,
+  "retrieved_top1_chunk": "...",
+  "query_latency_ms": 12.3
+}
+```
+
+### Output — `benchmarks/embedding-model/results/embedding_model_results.json`
+
+```json
+{
+  "phase": 3,
+  "top_k": 3,
+  "chunk_size": 500,
+  "chunk_overlap": 50,
+  "num_chunks": 42,
+  "num_questions": 10,
+  "weights": {
+    "thai_recall": 0.25,
+    "eng_recall": 0.15,
+    "latency": 0.15,
+    "cost": 0.15,
+    "self_host": 0.10,
+    "dimension": 0.05,
+    "max_tokens": 0.05,
+    "lock_in": 0.10
+  },
+  "results": [
+    {
+      "model": "bge_m3",
+      "meta": {
+        "name": "BAAI/bge-m3",
+        "dimensions": 1024,
+        "max_tokens": 8192,
+        "cost_per_1m_tokens": 0.0,
+        "vendor_lock_in": 0,
+        "self_hostable": true
+      },
+      "index_time_ms": 245.0,
+      "avg_query_latency_ms": 18.5,
+      "thai_recall": 1.0,
+      "eng_recall": 0.857,
+      "overall_recall": 0.9,
+      "mrr": 0.783,
+      "weighted_score": 0.8234,
+      "queries": [...]
+    }
+  ]
+}
+```
+
+**Ranking:** Results sorted by `weighted_score` (highest first); rank 1 = "⭐ RECOMMENDED"

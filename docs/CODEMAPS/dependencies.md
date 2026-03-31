@@ -1,8 +1,8 @@
-<!-- Generated: 2026-03-31 | Files scanned: 4 | Token estimate: ~500 -->
+<!-- Generated: 2026-03-31 | Files scanned: 8 | Token estimate: ~650 -->
 
 # Dependencies & Infrastructure Codemap
 
-**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄
+**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 + 3 🔄
 
 ---
 
@@ -64,6 +64,25 @@ Default model: `anthropic/claude-3-haiku` (fast + cheap for spike)
 
 ---
 
+## Phase 3 — Python Packages
+
+**File:** `benchmarks/embedding-model/requirements.txt`
+
+| Package | Purpose |
+|---------|---------|
+| `sentence-transformers` ≥3.0.0 | Open-source embedding models (HF hub) |
+| `numpy` ≥1.26.0 | Normalization, cosine retrieval |
+| `torch` ≥2.0.0 | Backend for sentence-transformers |
+| `openai` ≥1.30.0 | OpenAI text-embedding-3 models (optional) |
+| `rich` ≥13.7.0 | Comparison tables + scorecard |
+| `python-dotenv` ≥1.0.0 | Load `.env` for OPENAI_API_KEY |
+
+**Open-source models (no API key):** BAAI/bge-m3, intfloat/multilingual-e5-large, mixedbread-ai/mxbai-embed-large-v1
+
+**API models (optional):** text-embedding-3-large, text-embedding-3-small (requires `OPENAI_API_KEY`)
+
+---
+
 ## Phase 1 — Docker Infrastructure
 
 **File:** `docker/docker-compose.vector-db.yml`
@@ -103,6 +122,15 @@ make rag-eval-no-llm                   # indexing only, no API key needed
 make rag-eval-framework F=bare_metal   # single framework
 ```
 
+### Phase 3
+```bash
+make install-embed                     # pip install embedding-model/requirements.txt
+make embed-eval                        # all open-source models (no API key)
+make embed-eval-all                    # all models (requires OPENAI_API_KEY for OpenAI)
+make embed-eval-model M=bge_m3        # single model
+make embed-eval-topk K=5               # override top-k (default: 3)
+```
+
 ---
 
 ## Environment Variables
@@ -117,10 +145,14 @@ RAG_LLM_MODEL=anthropic/claude-3-haiku
 # Phase 2 (Embeddings — local, no key needed)
 RAG_EMBEDDING_MODEL=all-MiniLM-L6-v2    # fast; use multilingual-e5-small for Thai
 
-# Phase 2 (Tuning)
+# Phase 2 & 3 (Tuning — same chunk config for comparison fairness)
 RAG_CHUNK_SIZE=500
 RAG_CHUNK_OVERLAP=50
 RAG_TOP_K=3
+
+# Phase 3 (Optional — for OpenAI embedding models)
+OPENAI_API_KEY=sk-...                   # Required only for text-embedding-3-* models
+COHERE_API_KEY=                         # Placeholder (not yet used)
 ```
 
 ---

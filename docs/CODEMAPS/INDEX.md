@@ -1,16 +1,16 @@
-<!-- Generated: 2026-03-31 | Files scanned: 29 | Token estimate: ~350 -->
+<!-- Generated: 2026-03-31 | Files scanned: 38 | Token estimate: ~400 -->
 
 # RAG Spike Codemaps Index
 
-**Last Updated:** 2026-03-31 | **Project Phase:** 1 ✅ Vector DB | 2 🔄 RAG Framework
+**Last Updated:** 2026-03-31 | **Project Phase:** 1 ✅ Vector DB | 2 🔄 RAG Framework | 3 🔄 Embedding Models
 
 ## Quick Navigation
 
 | Codemap | Read When |
 |---------|-----------|
-| [architecture.md](./architecture.md) | Understanding system design, Port & Adapter pattern, entry points |
-| [data.md](./data.md) | Data schemas (BenchmarkRecord, RAGResult), dataset contents |
-| [dependencies.md](./dependencies.md) | Python packages, Docker stack, Makefile targets, env vars |
+| [architecture.md](./architecture.md) | Understanding system design, Port & Adapter pattern, entry points, all phases |
+| [data.md](./data.md) | Data schemas (BenchmarkRecord, RAGResult, EmbedResult), dataset contents |
+| [dependencies.md](./dependencies.md) | Python packages, Docker stack, Makefile targets, env vars, embedding models |
 
 ---
 
@@ -46,17 +46,30 @@ spike-rak/
 │   │   │   └── metrics.py               # LatencyStats, recall
 │   │   └── results/                     # Timestamped JSON outputs
 │   │
-│   └── rag-framework/                    # [Phase 2 🔄]
-│       ├── evaluate.py                   # Comparison runner
-│       ├── base.py                       # BaseRAGPipeline ABC
-│       ├── config.py                     # .env → settings
+│   ├── rag-framework/                    # [Phase 2 🔄]
+│   │   ├── evaluate.py                   # Comparison runner
+│   │   ├── base.py                       # BaseRAGPipeline ABC
+│   │   ├── config.py                     # .env → settings
+│   │   ├── requirements.txt
+│   │   ├── frameworks/
+│   │   │   ├── bare_metal/pipeline.py   # numpy + direct OpenRouter
+│   │   │   ├── llamaindex_poc/pipeline.py
+│   │   │   ├── langchain_poc/pipeline.py
+│   │   │   └── haystack_poc/pipeline.py
+│   │   └── results/                     # rag_framework_results.json
+│   │
+│   └── embedding-model/                  # [Phase 3 🔄]
+│       ├── evaluate.py                   # Retrieval quality + weighted scorecard
+│       ├── base.py                       # BaseEmbeddingModel ABC
+│       ├── config.py                     # Chunk settings, paths
 │       ├── requirements.txt
-│       ├── frameworks/
-│       │   ├── bare_metal/pipeline.py   # numpy + direct OpenRouter
-│       │   ├── llamaindex_poc/pipeline.py
-│       │   ├── langchain_poc/pipeline.py
-│       │   └── haystack_poc/pipeline.py
-│       └── results/                     # rag_framework_results.json
+│       ├── models/
+│       │   ├── bge_m3.py                # BAAI/bge-m3 (multilingual)
+│       │   ├── multilingual_e5.py       # intfloat/multilingual-e5-large
+│       │   ├── mxbai.py                 # mixedbread-ai/mxbai-embed-large-v1
+│       │   ├── openai_large.py          # text-embedding-3-large
+│       │   └── openai_small.py          # text-embedding-3-small
+│       └── results/                     # embedding_model_results.json
 │
 └── docs/CODEMAPS/                        # You are here
 ```
@@ -69,7 +82,7 @@ spike-rak/
 |-------|------|--------|-----------|
 | 1 | Vector DB Comparison | ✅ Code done | `run_benchmark.py` + 4 adapters |
 | 2 | RAG Framework Comparison | 🔄 Code done, not run yet | `evaluate.py` + 4 framework PoCs |
-| 3 | Embedding Model Comparison | ⏳ Not started | Thai language evaluation |
+| 3 | Embedding Model Comparison | 🔄 Code done | `evaluate.py` + 5 model adapters (Thai/Eng) |
 | 3.5 | LLM Provider Comparison | ⏳ Not started | Cost/quality tradeoffs |
 | 4 | API Layer & Auth Design | ⏳ Not started | FastAPI + JWT + RBAC |
 | 5 | Integration Testing | ⏳ Not started | End-to-end pipeline |
@@ -91,6 +104,15 @@ make install-rag && make rag-eval-no-llm
 
 # Single framework
 make rag-eval-framework F=bare_metal
+
+# Phase 3 (open-source models, no API key)
+make install-embed && make embed-eval
+
+# Phase 3 (all models including OpenAI)
+make install-embed && make embed-eval-all
+
+# Single embedding model
+make embed-eval-model M=bge_m3
 ```
 
 ---
