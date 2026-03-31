@@ -1,11 +1,13 @@
 .PHONY: help up-db down-db install benchmark-quick benchmark-medium benchmark-all \
         install-rag rag-eval rag-eval-framework rag-eval-no-llm \
-        install-embed embed-eval embed-eval-all embed-eval-model
+        install-embed embed-eval embed-eval-all embed-eval-model \
+        install-llm llm-eval llm-eval-all llm-eval-provider
 
 DOCKER_COMPOSE  = docker compose -f docker/docker-compose.vector-db.yml
 BENCH_DIR       = benchmarks/vector-db
 RAG_BENCH_DIR   = benchmarks/rag-framework
 EMBED_BENCH_DIR = benchmarks/embedding-model
+LLM_BENCH_DIR   = benchmarks/llm-provider
 
 help:
 	@echo ""
@@ -33,6 +35,14 @@ help:
 	@echo "  make embed-eval-all             Run all models (requires OPENAI_API_KEY for OpenAI)"
 	@echo "  make embed-eval-model M=name    Run single model (bge_m3|multilingual_e5|mxbai|openai_large|openai_small)"
 	@echo "  make embed-eval-topk K=5        Override top-k (default: 3)"
+	@echo ""
+	@echo "  Phase 3.5 — LLM Provider Comparison"
+	@echo "  ──────────────────────────────────────"
+	@echo "  make install-llm                Install Python deps for Phase 3.5"
+	@echo "  make llm-eval                   Run default provider (openrouter gpt-4o-mini)"
+	@echo "  make llm-eval-all               Run all configured providers"
+	@echo "  make llm-eval-provider P=name   Run single provider"
+	@echo "  make llm-eval-topk K=5          Override top-k (default: 3)"
 	@echo ""
 
 up-db:
@@ -99,3 +109,20 @@ embed-eval-model:
 
 embed-eval-topk:
 	cd $(EMBED_BENCH_DIR) && python evaluate.py --top-k $(or $(K),5)
+
+# ── Phase 3.5: LLM Provider ───────────────────────────────────────────────────
+
+install-llm:
+	pip install -r $(LLM_BENCH_DIR)/requirements.txt
+
+llm-eval:
+	cd $(LLM_BENCH_DIR) && python evaluate.py
+
+llm-eval-all:
+	cd $(LLM_BENCH_DIR) && python evaluate.py --providers all
+
+llm-eval-provider:
+	cd $(LLM_BENCH_DIR) && python evaluate.py --providers $(P)
+
+llm-eval-topk:
+	cd $(LLM_BENCH_DIR) && python evaluate.py --top-k $(or $(K),5)
