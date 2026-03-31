@@ -1,0 +1,12 @@
+# Vector DB clients
+qdrant-client>=1.9.0
+psycopg2-binary>=2.9.9
+pgvector>=0.2.5
+pymilvus>=2.4.0
+opensearch-py>=2.5.0
+
+# Utilities
+numpy>=1.26.0
+tqdm>=4.66.0
+rich>=13.7.0
+python-dotenv>=1.0.0
