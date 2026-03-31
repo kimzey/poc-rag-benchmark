@@ -19,8 +19,12 @@
 ```
 spike-rak/
 ├── plan.md                                  # 6-phase spike plan
-├── Makefile                                 # make benchmark-*, make rag-eval*
+├── SETUP.md                                 # Full usage & setup guide for all phases
+├── pyproject.toml                           # Root project (uv dependency groups)
+├── uv.lock                                  # Lockfile (reproducible installs)
+├── Makefile                                 # make <phase-target> wraps uv
 ├── .env.example                             # Environment variables template
+├── .gitignore                               # Updated: .venv-*/ pattern
 │
 ├── docker/
 │   └── docker-compose.vector-db.yml        # 6 services (Qdrant, PG, Milvus, OpenSearch + deps)
@@ -131,51 +135,50 @@ spike-rak/
 
 ## Common Commands
 
+All commands now use `uv` for reproducible installs:
+
 ```bash
-# Phase 1
-make install && make up-db && make benchmark-quick
+# Phase 1 — Vector DB benchmarks
+uv sync --group bench-vectordb
+make up-db && make benchmark-quick
 
-# Phase 2 (needs OPENROUTER_API_KEY in .env)
-make install-rag && make rag-eval
+# Phase 2 — RAG frameworks (needs OPENROUTER_API_KEY)
+uv sync --group bench-rag
+make rag-eval
 
-# Phase 2 (no API key — indexing only)
-make install-rag && make rag-eval-no-llm
+# Phase 2 — indexing only (no API key needed)
+make rag-eval-no-llm
 
 # Single framework
 make rag-eval-framework F=bare_metal
 
-# Phase 3 (open-source models, no API key)
-make install-embed && make embed-eval
+# Phase 3 — embedding models (open-source, no API key)
+uv sync --group bench-embed
+make embed-eval
 
-# Phase 3 (all models including OpenAI)
-make install-embed && make embed-eval-all
+# Phase 3 — with OpenAI models
+make embed-eval-all
 
-# Single embedding model
+# Single model
 make embed-eval-model M=bge_m3
 
-# Phase 3.5 (OpenRouter only, needs OPENROUTER_API_KEY in .env)
-make install-llm && make llm-eval
+# Phase 3.5 — LLM providers
+uv sync --group bench-llm
+make llm-eval                   # OpenRouter only
+make llm-eval-all               # All providers
+make llm-eval-provider P=openai # Single provider
 
-# Phase 3.5 (all 11 providers, needs all API keys)
-make install-llm && make llm-eval-all
+# Phase 4 — FastAPI server
+uv sync --group api
+make api-run                    # http://localhost:8000/docs
 
-# Single LLM provider
-make llm-eval-provider P=openrouter_gpt4o_mini
+# Phase 5 — Integration testing
+uv sync --group test
+make test-integration           # 27 E2E tests
+make load-test U=100 T=60s      # Load test: 100 users, 60s
 
-# Phase 4 (FastAPI API server)
-make api-run                               # Run on http://localhost:8000
-
-# Phase 4 (View API docs)
-# Visit: http://localhost:8000/docs (Swagger UI)
-#        http://localhost:8000/redoc (ReDoc)
-
-# Phase 5 (Integration testing)
-make install-test
-make test-integration              # 27 E2E tests, 7 scenarios
-
-# Phase 5 (Load testing — with running api-run)
-make load-test                     # Locust headless: 50 users, 30s
-locust -f tests/load/locustfile.py # Interactive UI at http://localhost:8089
+# All phases at once
+uv sync --all-groups
 ```
 
 ### Phase 4 Example Flows

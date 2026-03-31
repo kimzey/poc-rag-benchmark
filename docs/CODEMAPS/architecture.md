@@ -253,7 +253,8 @@ BaseLLMProvider (ABC)
 | `tests/integration/conftest.py` | 5 | Pytest fixtures (TestClient, auth tokens) |
 | `tests/integration/test_scenarios.py` | 5 | 27 E2E tests across 7 scenarios |
 | `tests/load/locustfile.py` | 5 | Locust load test (EmployeeUser + CustomerUser) |
-| `Makefile` | 1-5 | `make test-integration`, `make load-test` |
+| `pyproject.toml` | 1-5 | Root project config, uv dependency groups |
+| `Makefile` | 1-5 | All make targets (wraps `uv sync` + runner commands) |
 
 ## Anti-Lock-in Strategy
 
