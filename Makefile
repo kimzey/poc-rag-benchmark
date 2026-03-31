@@ -2,9 +2,11 @@
         install-rag rag-eval rag-eval-framework rag-eval-no-llm \
         install-embed embed-eval embed-eval-all embed-eval-model \
         install-llm llm-eval llm-eval-all llm-eval-provider \
-        install-api api-run api-demo
+        install-api api-run api-demo \
+        install-test test-integration test-integration-verbose load-test
 
 API_DIR         = api
+TEST_DIR        = tests
 DOCKER_COMPOSE  = docker compose -f docker/docker-compose.vector-db.yml
 BENCH_DIR       = benchmarks/vector-db
 RAG_BENCH_DIR   = benchmarks/rag-framework
@@ -51,6 +53,13 @@ help:
 	@echo "  make install-api            Install Python deps for Phase 4"
 	@echo "  make api-run                Start FastAPI server (http://localhost:8000/docs)"
 	@echo "  make api-demo               Quick smoke test (no API key needed)"
+	@echo ""
+	@echo "  Phase 5 — Integration Testing"
+	@echo "  ──────────────────────────────"
+	@echo "  make install-test                Install Python deps for Phase 5"
+	@echo "  make test-integration            Run all 7 E2E integration test scenarios"
+	@echo "  make test-integration-verbose    Run with full output (no capture)"
+	@echo "  make load-test                   Run Locust load test (requires: make api-run)"
 	@echo ""
 
 up-db:
@@ -157,3 +166,26 @@ api-demo:
 		-H "Authorization: Bearer $$TOKEN" \
 		-H "Content-Type: application/json" \
 		-d '{"messages":[{"role":"user","content":"นโยบายการลาพักร้อนเป็นอย่างไร?"}],"top_k":3}' | python3 -m json.tool
+
+# ── Phase 5: Integration Testing ─────────────────────────────────────────────
+
+install-test:
+	pip install -r $(API_DIR)/requirements.txt
+	pip install -r $(TEST_DIR)/requirements.txt
+
+test-integration:
+	pytest $(TEST_DIR)/integration/ -v --tb=short -s
+
+test-integration-verbose:
+	pytest $(TEST_DIR)/integration/ -v --tb=long -s --no-header
+
+load-test:
+	@echo "\n=== Phase 5 Load Test (Locust headless) ===\n"
+	@echo "Make sure 'make api-run' is running in another terminal."
+	locust -f $(TEST_DIR)/load/locustfile.py \
+		--host=http://localhost:8000 \
+		--headless \
+		--users $(or $(U),50) \
+		--spawn-rate $(or $(R),5) \
+		--run-time $(or $(T),30s) \
+		--only-summary

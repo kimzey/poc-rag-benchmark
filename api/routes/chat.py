@@ -1,7 +1,8 @@
 """
 Phase 4: Chat routes — POST /api/v1/chat/completions
 """
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
+from openai import APIConnectionError, APITimeoutError
 
 from api.auth.dependencies import get_current_user, require_permission
 from api.auth.models import Permission, User
@@ -25,4 +26,10 @@ async def chat_completions(
     - Retrieves only documents the authenticated user is allowed to see.
     - Calls LLM via OpenRouter (or mock if no key).
     """
-    return await run_rag(body, user)
+    try:
+        return await run_rag(body, user)
+    except (APITimeoutError, APIConnectionError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"LLM service unavailable: {exc}",
+        )
