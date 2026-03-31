@@ -1,8 +1,8 @@
-<!-- Generated: 2026-03-31 | Files scanned: 8 | Token estimate: ~650 -->
+<!-- Generated: 2026-03-31 | Files scanned: 10 | Token estimate: ~750 -->
 
 # Dependencies & Infrastructure Codemap
 
-**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 + 3 🔄
+**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 + 3 🔄 + 3.5 🆕
 
 ---
 
@@ -62,6 +62,17 @@
 
 Default model: `anthropic/claude-3-haiku` (fast + cheap for spike)
 
+## Phase 3.5 — External Services
+
+| Service | Auth | Used By | Notes |
+|---------|------|---------|-------|
+| **OpenRouter** | `OPENROUTER_API_KEY` | Phase 3.5 provider adapter | Multi-model gateway, 6+ LLMs available |
+| **OpenAI Direct** | `OPENAI_API_KEY` | Phase 3.5 provider adapter | gpt-4o, gpt-4o-mini endpoints |
+| **Anthropic Direct** | `ANTHROPIC_API_KEY` | Phase 3.5 provider adapter | claude-3.5-sonnet, claude-3-haiku |
+| **Ollama** | None (local) | Phase 3.5 provider adapter | Self-hosted at `http://localhost:11434` (default) |
+
+Default provider: `openrouter_gpt4o_mini` (multi-model routing, cost-effective)
+
 ---
 
 ## Phase 3 — Python Packages
@@ -80,6 +91,19 @@ Default model: `anthropic/claude-3-haiku` (fast + cheap for spike)
 **Open-source models (no API key):** BAAI/bge-m3, intfloat/multilingual-e5-large, mixedbread-ai/mxbai-embed-large-v1
 
 **API models (optional):** text-embedding-3-large, text-embedding-3-small (requires `OPENAI_API_KEY`)
+
+---
+
+## Phase 3.5 — Python Packages
+
+**File:** `benchmarks/llm-provider/requirements.txt`
+
+| Package | Purpose |
+|---------|---------|
+| `openai` ≥1.30.0 | OpenAI & OpenRouter & Ollama (all OpenAI-compatible) |
+| `anthropic` ≥0.40.0 | Anthropic Direct client (if using Anthropic provider) |
+| `rich` ≥13.7.0 | Comparison tables + scorecard |
+| `python-dotenv` ≥1.0.0 | Load `.env` for API keys |
 
 ---
 
@@ -131,6 +155,15 @@ make embed-eval-model M=bge_m3        # single model
 make embed-eval-topk K=5               # override top-k (default: 3)
 ```
 
+### Phase 3.5
+```bash
+make install-llm                       # pip install llm-provider/requirements.txt
+make llm-eval                          # OpenRouter only (needs OPENROUTER_API_KEY)
+make llm-eval-all                      # all 11 providers (needs all API keys)
+make llm-eval-provider P=openrouter_gpt4o_mini  # single provider
+make llm-eval-topk K=5                 # override top-k (default: 3)
+```
+
 ---
 
 ## Environment Variables
@@ -145,14 +178,24 @@ RAG_LLM_MODEL=anthropic/claude-3-haiku
 # Phase 2 (Embeddings — local, no key needed)
 RAG_EMBEDDING_MODEL=all-MiniLM-L6-v2    # fast; use multilingual-e5-small for Thai
 
-# Phase 2 & 3 (Tuning — same chunk config for comparison fairness)
+# Phase 2 & 3 & 3.5 (Tuning — same chunk config for comparison fairness)
 RAG_CHUNK_SIZE=500
 RAG_CHUNK_OVERLAP=50
 RAG_TOP_K=3
 
 # Phase 3 (Optional — for OpenAI embedding models)
 OPENAI_API_KEY=sk-...                   # Required only for text-embedding-3-* models
-COHERE_API_KEY=                         # Placeholder (not yet used)
+
+# Phase 3.5 (LLM Providers)
+OPENROUTER_API_KEY=sk-or-...            # OpenRouter multi-model gateway
+OPENAI_API_KEY=sk-...                   # OpenAI Direct (gpt-4o, gpt-4o-mini)
+ANTHROPIC_API_KEY=sk-ant-...            # Anthropic Direct (claude-3.5-sonnet)
+OLLAMA_BASE_URL=http://localhost:11434  # Ollama self-hosted LLM
+OLLAMA_MODEL=llama3.1:8b                # Ollama model to use
+
+# Phase 3.5 (Generation tuning)
+LLM_MAX_NEW_TOKENS=512                  # Max tokens for answer generation
+LLM_TEMPERATURE=0.0                     # Temperature for consistency
 ```
 
 ---
@@ -163,3 +206,6 @@ COHERE_API_KEY=                         # Placeholder (not yet used)
 |-------|-----|-----|------|------|
 | Phase 1 | 4+ cores | 8GB+ | 10GB+ | Milvus + OpenSearch need ≥2GB each |
 | Phase 2 | 2+ cores | 4GB+ | 1GB+ | sentence-transformers model ~80–500MB |
+| Phase 3 | 2+ cores | 4GB+ | 2GB+ | Embedding models (BGE-M3, E5-large) ~500MB–1.5GB |
+| Phase 3.5 (Ollama) | 4+ cores + GPU | 16GB+ | 10GB+ | Local LLM inference; CPU-only slower (~5–10s/token) |
+| Phase 3.5 (API) | 1+ core | 2GB+ | 100MB | Network-based; no local compute needed |

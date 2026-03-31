@@ -1,8 +1,8 @@
-<!-- Generated: 2026-03-31 | Files scanned: 29 | Token estimate: ~850 -->
+<!-- Generated: 2026-03-31 | Files scanned: 38 | Token estimate: ~1000 -->
 
 # Architecture Codemap
 
-**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 + 3 🔄 (Embedding Models)
+**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 + 3 🔄 + 3.5 🆕 (LLM Providers)
 
 ## Overview
 
@@ -34,16 +34,26 @@ spike-rak/
 │   LLM: OpenRouter (configurable model)
 │   Embeddings: sentence-transformers (local, no API key)
 │
-└── [Phase 3 🔄] Embedding Model Comparison ─────────────────────
-    benchmarks/embedding-model/evaluate.py
-      └─ BaseEmbeddingModel (ABC)
-          ├─ BGEM3Model            (BAAI/bge-m3, multilingual)
-          ├─ MultilingualE5LargeModel  (intfloat/multilingual-e5-large, query/passage prefix)
-          ├─ MxbaiEmbedLargeModel      (mixedbread-ai/mxbai-embed-large-v1)
-          ├─ OpenAILargeModel      (text-embedding-3-large)
-          └─ OpenAISmallModel      (text-embedding-3-small)
-    Data: Same 3 Thai/English/mixed docs from Phase 2 (reused corpus)
-    Metrics: Recall@k, MRR, latency, cost, self-hostability, weighted scorecard
+├── [Phase 3 🔄] Embedding Model Comparison ─────────────────────
+│   benchmarks/embedding-model/evaluate.py
+│     └─ BaseEmbeddingModel (ABC)
+│         ├─ BGEM3Model            (BAAI/bge-m3, multilingual)
+│         ├─ MultilingualE5LargeModel  (intfloat/multilingual-e5-large, query/passage prefix)
+│         ├─ MxbaiEmbedLargeModel      (mixedbread-ai/mxbai-embed-large-v1)
+│         ├─ OpenAILargeModel      (text-embedding-3-large)
+│         └─ OpenAISmallModel      (text-embedding-3-small)
+│   Data: Same 3 Thai/English/mixed docs from Phase 2 (reused corpus)
+│   Metrics: Recall@k, MRR, latency, cost, self-hostability, weighted scorecard
+│
+└── [Phase 3.5 🆕] LLM Provider Comparison ─────────────────────
+    benchmarks/llm-provider/evaluate.py
+      └─ BaseLLMProvider (ABC)
+          ├─ OpenRouterProvider      (6 models: gpt-4o, claude-3.5, gemini, llama, deepseek)
+          ├─ OpenAIDirectProvider    (gpt-4o, gpt-4o-mini)
+          ├─ AnthropicDirectProvider (claude-3.5-sonnet, claude-3-haiku)
+          └─ OllamaProvider          (self-hosted llama3.1:8b default)
+    Data: Same 3 docs (TF-IDF retrieval, no embedding model needed)
+    Metrics: Answer quality (F1), latency, cost, lock-in, self-hostability, weighted scorecard
 ```
 
 ## Phase 1 — VectorDBClient Interface
@@ -124,6 +134,39 @@ BaseEmbeddingModel (ABC)
 
 **Weighted Scorecard:** Thai 25% · Eng 15% · Latency 15% · Cost 15% · Self-host 10% · Dims 5% · MaxTok 5% · Lock-in 10%
 
+## Phase 3.5 — BaseLLMProvider Interface
+
+**File:** `benchmarks/llm-provider/base.py`
+
+```
+BaseLLMProvider (ABC)
+├─ meta → ProviderMeta
+│   # name, model_id, provider, costs, lock-in, self_hostable, openai_compatible
+└─ generate(prompt: str, context: str) → GenerateResult
+    # wraps _generate_raw(), tracks latency + cost
+```
+
+### Phase 3.5 Evaluation Metrics
+
+| Metric | How Measured | Higher/Lower |
+|--------|-------------|--------------|
+| Overall F1 | Token-overlap F1 of generated vs expected answer | Higher |
+| Thai F1 | Avg F1 for Thai-language questions | Higher |
+| Avg Latency (ms) | Wall time for one generate() call | Lower |
+| Total Cost (USD) | Sum of token costs for all 10 questions | Lower |
+| Cost per 1M input tokens | USD pricing for input tokens | Lower |
+| Cost per 1M output tokens | USD pricing for output tokens | Lower |
+| Vendor Lock-in | 0 (open) to 10 (proprietary) | Lower |
+| Self-hostable | bool (local vs API-only) | Higher |
+| OpenAI compatible | bool (can swap endpoints) | Higher |
+| Reliability | Qualitative: fallback support, uptime SLA | Higher |
+| Privacy | Qualitative: where data flows | Higher |
+| Ease of switching | Qualitative: cost + effort to switch models | Higher |
+
+**Retrieval:** TF-IDF cosine (no embedding model dependency). For fair comparison, pass `--use-bge` to use BGE-M3.
+
+**Weighted Scorecard:** Quality 20% · Lock-in 20% · Cost 15% · Latency 15% · Thai 10% · Reliability 10% · Privacy 5% · Ease-of-switching 5%
+
 ## Entry Points
 
 | File | Phase | Responsibility |
@@ -133,7 +176,9 @@ BaseEmbeddingModel (ABC)
 | `benchmarks/rag-framework/frameworks/*/pipeline.py` | 2 | Individual framework PoC |
 | `benchmarks/embedding-model/evaluate.py` | 3 | Model evaluator, retrieval quality, weighted scorecard |
 | `benchmarks/embedding-model/models/*.py` | 3 | Individual embedding model adapter |
-| `Makefile` | 1-3 | `make benchmark-*`, `make rag-eval*`, `make embed-eval*` |
+| `benchmarks/llm-provider/evaluate.py` | 3.5 | Provider evaluator, answer quality, weighted scorecard |
+| `benchmarks/llm-provider/providers/*.py` | 3.5 | Individual LLM provider adapter |
+| `Makefile` | 1-3.5 | `make benchmark-*`, `make rag-eval*`, `make embed-eval*`, `make llm-eval*` |
 
 ## Anti-Lock-in Strategy
 
@@ -160,9 +205,17 @@ Both phases apply the same pattern:
 3. Add to `MODEL_REGISTRY` in `evaluate.py`
 4. For query/passage prefix models: add `encode_queries()` / `encode_passages()` methods
 
+**Add new LLM Provider (Phase 3.5):**
+1. `providers/myprovider.py` inheriting `BaseLLMProvider`
+2. Implement `_generate_raw(prompt, context)` → `(text, input_tokens, output_tokens)`
+3. Implement `meta` property with `ProviderMeta`
+4. Add to `PROVIDER_REGISTRY` in `evaluate.py`
+5. Update `.env.example` with provider-specific API keys
+
 ## Related Files
 
 - `plan.md` — Full 6-phase spike plan (Phases 4–6 not yet started)
-- `datasets/` — Thai/English/Mixed test documents (reused Phases 2–3)
+- `datasets/` — Thai/English/Mixed test documents (reused Phases 2–3.5)
 - `.env.example` — Environment variables template
-- `benchmarks/embedding-model/results/` — JSON output with rankings
+- `benchmarks/embedding-model/results/` — Phase 3 JSON output with rankings
+- `benchmarks/llm-provider/results/` — Phase 3.5 JSON output with rankings

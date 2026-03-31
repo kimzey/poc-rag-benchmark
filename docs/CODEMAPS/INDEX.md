@@ -1,8 +1,8 @@
-<!-- Generated: 2026-03-31 | Files scanned: 38 | Token estimate: ~400 -->
+<!-- Generated: 2026-03-31 | Files scanned: 45 | Token estimate: ~450 -->
 
 # RAG Spike Codemaps Index
 
-**Last Updated:** 2026-03-31 | **Project Phase:** 1 ✅ Vector DB | 2 🔄 RAG Framework | 3 🔄 Embedding Models
+**Last Updated:** 2026-03-31 | **Project Phase:** 1 ✅ Vector DB | 2 🔄 RAG Framework | 3 🔄 Embedding Models | 3.5 🆕 LLM Providers
 
 ## Quick Navigation
 
@@ -58,18 +58,30 @@ spike-rak/
 │   │   │   └── haystack_poc/pipeline.py
 │   │   └── results/                     # rag_framework_results.json
 │   │
-│   └── embedding-model/                  # [Phase 3 🔄]
-│       ├── evaluate.py                   # Retrieval quality + weighted scorecard
-│       ├── base.py                       # BaseEmbeddingModel ABC
-│       ├── config.py                     # Chunk settings, paths
+│   ├── embedding-model/                  # [Phase 3 🔄]
+│   │   ├── evaluate.py                   # Retrieval quality + weighted scorecard
+│   │   ├── base.py                       # BaseEmbeddingModel ABC
+│   │   ├── config.py                     # Chunk settings, paths
+│   │   ├── requirements.txt
+│   │   ├── models/
+│   │   │   ├── bge_m3.py                # BAAI/bge-m3 (multilingual)
+│   │   │   ├── multilingual_e5.py       # intfloat/multilingual-e5-large
+│   │   │   ├── mxbai.py                 # mixedbread-ai/mxbai-embed-large-v1
+│   │   │   ├── openai_large.py          # text-embedding-3-large
+│   │   │   └── openai_small.py          # text-embedding-3-small
+│   │   └── results/                     # embedding_model_results.json
+│   │
+│   └── llm-provider/                     # [Phase 3.5 🆕]
+│       ├── evaluate.py                   # Answer quality + weighted scorecard
+│       ├── base.py                       # BaseLLMProvider ABC
+│       ├── config.py                     # API keys, chunk settings, paths
 │       ├── requirements.txt
-│       ├── models/
-│       │   ├── bge_m3.py                # BAAI/bge-m3 (multilingual)
-│       │   ├── multilingual_e5.py       # intfloat/multilingual-e5-large
-│       │   ├── mxbai.py                 # mixedbread-ai/mxbai-embed-large-v1
-│       │   ├── openai_large.py          # text-embedding-3-large
-│       │   └── openai_small.py          # text-embedding-3-small
-│       └── results/                     # embedding_model_results.json
+│       ├── providers/
+│       │   ├── openrouter.py            # 6 multi-model routing via OpenRouter
+│       │   ├── openai_direct.py         # gpt-4o, gpt-4o-mini
+│       │   ├── anthropic_direct.py      # claude-3.5-sonnet, claude-3-haiku
+│       │   └── ollama.py                # Self-hosted llama3.1:8b
+│       └── results/                     # llm_provider_results.json
 │
 └── docs/CODEMAPS/                        # You are here
 ```
@@ -83,7 +95,7 @@ spike-rak/
 | 1 | Vector DB Comparison | ✅ Code done | `run_benchmark.py` + 4 adapters |
 | 2 | RAG Framework Comparison | 🔄 Code done, not run yet | `evaluate.py` + 4 framework PoCs |
 | 3 | Embedding Model Comparison | 🔄 Code done | `evaluate.py` + 5 model adapters (Thai/Eng) |
-| 3.5 | LLM Provider Comparison | ⏳ Not started | Cost/quality tradeoffs |
+| 3.5 | LLM Provider Comparison | 🆕 Code done | `evaluate.py` + 4 provider adapters (11 models) |
 | 4 | API Layer & Auth Design | ⏳ Not started | FastAPI + JWT + RBAC |
 | 5 | Integration Testing | ⏳ Not started | End-to-end pipeline |
 | 6 | RFC + Knowledge Sharing | ⏳ Not started | Final RFC document |
@@ -113,6 +125,15 @@ make install-embed && make embed-eval-all
 
 # Single embedding model
 make embed-eval-model M=bge_m3
+
+# Phase 3.5 (OpenRouter only, needs OPENROUTER_API_KEY in .env)
+make install-llm && make llm-eval
+
+# Phase 3.5 (all 11 providers, needs all API keys)
+make install-llm && make llm-eval-all
+
+# Single LLM provider
+make llm-eval-provider P=openrouter_gpt4o_mini
 ```
 
 ---

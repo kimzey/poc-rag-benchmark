@@ -1,8 +1,8 @@
-<!-- Generated: 2026-03-31 | Files scanned: 10 | Token estimate: ~650 -->
+<!-- Generated: 2026-03-31 | Files scanned: 12 | Token estimate: ~750 -->
 
 # Data Schema & Generation Codemap
 
-**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 + 3 🔄
+**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 + 3 🔄 + 3.5 🆕
 
 ---
 
@@ -278,6 +278,120 @@ Same 10 questions from Phase 2 questions.json:
       "overall_recall": 0.9,
       "mrr": 0.783,
       "weighted_score": 0.8234,
+      "queries": [...]
+    }
+  ]
+}
+```
+
+**Ranking:** Results sorted by `weighted_score` (highest first); rank 1 = "⭐ RECOMMENDED"
+
+---
+
+## Phase 3.5 — LLM Provider Benchmark Data
+
+### GenerateResult
+
+```python
+@dataclass
+class GenerateResult:
+    text: str               # Generated answer text
+    latency_ms: float       # Wall time for the full response
+    input_tokens: int       # Prompt tokens consumed
+    output_tokens: int      # Completion tokens generated
+    cost_usd: float         # Estimated cost in USD for this call
+```
+
+### ProviderMeta
+
+```python
+@dataclass
+class ProviderMeta:
+    name: str               # e.g. "OpenRouter / gpt-4o-mini"
+    model_id: str           # API model string (e.g. "openai/gpt-4o-mini")
+    provider: str           # "openrouter" | "openai" | "anthropic" | "ollama"
+    cost_per_1m_input: float    # USD per 1M input tokens; 0.0 for self-hosted
+    cost_per_1m_output: float   # USD per 1M output tokens; 0.0 for self-hosted
+    vendor_lock_in: int     # 0 (fully open) to 10 (hard lock-in)
+    self_hostable: bool     # Can run locally without cloud API
+    openai_compatible: bool # Uses OpenAI-compatible API endpoint
+```
+
+### Corpus & Questions
+
+Same 3 documents and 10 questions as Phase 3, but retrieval is TF-IDF (no embedding model):
+
+Corpus: ~42 chunks from hr_policy_th.md, tech_docs_en.md, faq_mixed.md
+
+Test questions: 10 questions across Thai HR, English API, English Security, Thai Mixed
+
+### Query Result Structure (Phase 3.5)
+
+```json
+{
+  "id": 1,
+  "question": "...",
+  "category": "thai_hr",
+  "expected": "10 วันต่อปี",
+  "generated": "[LLM-generated answer]",
+  "f1_score": 0.85,
+  "latency_ms": 450.2,
+  "input_tokens": 215,
+  "output_tokens": 42,
+  "cost_usd": 0.001234
+}
+```
+
+### Provider Registry
+
+11 provider/model combinations:
+
+| Name | Provider | Model | Cost Input | Cost Output | Lock-in |
+|------|----------|-------|-----------|------------|---------|
+| openrouter_gpt4o_mini | OpenRouter | openai/gpt-4o-mini | $0.15/M | $0.60/M | 3 |
+| openrouter_gpt4o | OpenRouter | openai/gpt-4o | $2.50/M | $10.00/M | 3 |
+| openrouter_claude_sonnet | OpenRouter | anthropic/claude-3.5-sonnet | $3.00/M | $15.00/M | 3 |
+| openrouter_llama3 | OpenRouter | meta-llama/llama-3.1-70b | $0.35/M | $0.40/M | 0 |
+| openrouter_gemini_flash | OpenRouter | google/gemini-flash-1.5 | $0.075/M | $0.30/M | 2 |
+| openrouter_deepseek | OpenRouter | deepseek/deepseek-chat | $0.14/M | $0.28/M | 1 |
+| openai_gpt4o_mini | OpenAI Direct | gpt-4o-mini | $0.15/M | $0.60/M | 8 |
+| openai_gpt4o | OpenAI Direct | gpt-4o | $2.50/M | $10.00/M | 8 |
+| anthropic_sonnet | Anthropic Direct | claude-3-5-sonnet-20241022 | $3.00/M | $15.00/M | 7 |
+| anthropic_haiku | Anthropic Direct | claude-3-haiku-20240307 | $0.80/M | $4.00/M | 7 |
+| ollama | Ollama (self-hosted) | llama3.1:8b (default) | $0.0 | $0.0 | 0 |
+
+Default: `openrouter_gpt4o_mini` (fast + cheap)
+
+### Output — `benchmarks/llm-provider/results/llm_provider_results.json`
+
+```json
+{
+  "phase": "3.5",
+  "top_k": 3,
+  "chunk_size": 500,
+  "chunk_overlap": 50,
+  "num_chunks": 42,
+  "num_questions": 10,
+  "weights": {
+    "overall_quality": 0.20,
+    "lock_in": 0.20,
+    "cost": 0.15,
+    "latency": 0.15,
+    "thai_quality": 0.10,
+    "reliability": 0.10,
+    "privacy": 0.05,
+    "ease_switching": 0.05
+  },
+  "results": [
+    {
+      "provider": "openrouter_gpt4o_mini",
+      "meta": { ... },
+      "overall_f1": 0.8234,
+      "thai_f1": 0.9100,
+      "avg_latency_ms": 450.2,
+      "total_cost_usd": 0.012450,
+      "num_questions": 10,
+      "weighted_score": 0.8450,
       "queries": [...]
     }
   ]
