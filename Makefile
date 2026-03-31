@@ -1,8 +1,10 @@
 .PHONY: help up-db down-db install benchmark-quick benchmark-medium benchmark-all \
         install-rag rag-eval rag-eval-framework rag-eval-no-llm \
         install-embed embed-eval embed-eval-all embed-eval-model \
-        install-llm llm-eval llm-eval-all llm-eval-provider
+        install-llm llm-eval llm-eval-all llm-eval-provider \
+        install-api api-run api-demo
 
+API_DIR         = api
 DOCKER_COMPOSE  = docker compose -f docker/docker-compose.vector-db.yml
 BENCH_DIR       = benchmarks/vector-db
 RAG_BENCH_DIR   = benchmarks/rag-framework
@@ -43,6 +45,12 @@ help:
 	@echo "  make llm-eval-all               Run all configured providers"
 	@echo "  make llm-eval-provider P=name   Run single provider"
 	@echo "  make llm-eval-topk K=5          Override top-k (default: 3)"
+	@echo ""
+	@echo "  Phase 4 — API Layer & Auth Design"
+	@echo "  ───────────────────────────────────"
+	@echo "  make install-api            Install Python deps for Phase 4"
+	@echo "  make api-run                Start FastAPI server (http://localhost:8000/docs)"
+	@echo "  make api-demo               Quick smoke test (no API key needed)"
 	@echo ""
 
 up-db:
@@ -126,3 +134,26 @@ llm-eval-provider:
 
 llm-eval-topk:
 	cd $(LLM_BENCH_DIR) && python evaluate.py --top-k $(or $(K),5)
+
+# ── Phase 4: API Layer & Auth ─────────────────────────────────────────────────
+
+install-api:
+	pip install -r $(API_DIR)/requirements.txt
+
+api-run:
+	uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
+
+api-demo:
+	@echo "\n=== Phase 4 PoC Smoke Test ===\n"
+	@echo "1) Login as employee → get JWT"
+	@TOKEN=$$(curl -s -X POST http://localhost:8000/api/v1/auth/token \
+		-H "Content-Type: application/json" \
+		-d '{"username":"bob_employee","password":"emp123"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])"); \
+	echo "   Token: $$TOKEN\n"; \
+	echo "2) GET /me — check user info & permissions"; \
+	curl -s http://localhost:8000/api/v1/me -H "Authorization: Bearer $$TOKEN" | python3 -m json.tool; \
+	echo "\n3) POST /chat/completions — RAG query (permission-filtered)"; \
+	curl -s -X POST http://localhost:8000/api/v1/chat/completions \
+		-H "Authorization: Bearer $$TOKEN" \
+		-H "Content-Type: application/json" \
+		-d '{"messages":[{"role":"user","content":"นโยบายการลาพักร้อนเป็นอย่างไร?"}],"top_k":3}' | python3 -m json.tool
