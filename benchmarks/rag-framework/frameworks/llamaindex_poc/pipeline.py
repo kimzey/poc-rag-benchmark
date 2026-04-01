@@ -41,8 +41,11 @@ class LlamaIndexRAGPipeline(BaseRAGPipeline):
         from llama_index.core import Settings
         from llama_index.llms.openai import OpenAI as LlamaOpenAI
 
+        # LlamaIndex validates against OpenAI's model list — strip provider prefix
+        # "openai/gpt-4o-mini" → "gpt-4o-mini"
+        llm_model_name = config.LLM_MODEL.split("/")[-1]
         Settings.llm = LlamaOpenAI(
-            model=config.LLM_MODEL,
+            model=llm_model_name,
             api_key=config.OPENROUTER_API_KEY,
             api_base=config.OPENROUTER_BASE_URL,
             temperature=0.1,

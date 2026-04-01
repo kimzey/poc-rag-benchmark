@@ -20,6 +20,15 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+# openai 1.71 doesn't yet have ChatCompletionMessageCustomToolCall — haystack 2.18 expects it.
+# Stub it as an alias so the import doesn't fail; haystack only uses it for type hints.
+try:
+    from openai.types.chat import ChatCompletionMessageCustomToolCall as _  # noqa: F401
+except ImportError:
+    import openai.types.chat as _oai_chat
+    from openai.types.chat import ChatCompletionMessageToolCall
+    _oai_chat.ChatCompletionMessageCustomToolCall = ChatCompletionMessageToolCall  # type: ignore[attr-defined]
+
 import config
 from base import BaseRAGPipeline, IndexStats, RAGResult
 
