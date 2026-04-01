@@ -292,3 +292,117 @@ ChunkViewer {
     text-align: center;
     color: $text-muted;
 }
+
+/* ── Benchmarks & Results shared title ───────────────────────────────────── */
+
+#bench-title, #results-title {
+    padding: 1 2;
+    text-style: bold;
+    background: $primary-darken-2;
+    width: 100%;
+    height: 3;
+    text-align: center;
+    content-align: center middle;
+}
+
+/* ── TabbedContent panels ────────────────────────────────────────────────── */
+
+#bench-tabs, #results-tabs {
+    height: 1fr;
+}
+
+/* ── Benchmark tab internals ─────────────────────────────────────────────── */
+
+_VectorDBTab, _RAGFrameworkTab, _EmbeddingModelTab, _LLMProviderTab {
+    padding: 1 2;
+    height: 1fr;
+    layout: vertical;
+}
+
+#vdb-checks, #rag-checks, #emb-checks, #rag-options {
+    height: auto;
+    margin-bottom: 1;
+}
+
+#vdb-checks Checkbox, #rag-checks Checkbox, #emb-checks Checkbox {
+    margin-right: 2;
+}
+
+#vdb-options, #emb-options, #llm-options {
+    height: 3;
+    margin-bottom: 1;
+    layout: horizontal;
+}
+
+#vdb-options Label, #emb-options Label, #llm-options Label {
+    width: auto;
+    margin-right: 1;
+    content-align: left middle;
+    height: 3;
+}
+
+.short-input {
+    width: 12;
+}
+
+.dim-label {
+    color: $text-muted;
+    margin-bottom: 1;
+}
+
+#vdb-prereq, #rag-key-hint, #emb-key-hint {
+    margin-bottom: 1;
+}
+
+#llm-key-status {
+    margin-bottom: 1;
+}
+
+/* ── BenchmarkProgress ───────────────────────────────────────────────────── */
+
+BenchmarkProgress {
+    height: 1fr;
+    layout: vertical;
+    margin-top: 1;
+}
+
+#bp-header {
+    height: 3;
+    layout: horizontal;
+    padding: 0 1;
+    background: $panel-darken-1;
+}
+
+#bp-state {
+    width: 1fr;
+    content-align: left middle;
+    height: 3;
+}
+
+#bp-cancel {
+    width: 12;
+    height: 3;
+}
+
+#bp-log {
+    height: 1fr;
+    border: tall $panel-darken-2;
+    background: $surface-darken-1;
+}
+
+/* ── Results tab internals ───────────────────────────────────────────────── */
+
+_VectorDBResult, _RAGFrameworkResult, _EmbeddingModelResult, _LLMProviderResult {
+    padding: 1 2;
+    height: 1fr;
+}
+
+ResultTable {
+    margin-bottom: 2;
+    height: auto;
+}
+
+ResultTable DataTable {
+    height: auto;
+    max-height: 20;
+}

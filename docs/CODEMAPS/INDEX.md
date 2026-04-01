@@ -1,10 +1,10 @@
-<!-- Generated: 2026-04-01 | Files scanned: 50 | Token estimate: ~300 -->
+<!-- Generated: 2026-04-01 | Files scanned: 54 | Token estimate: ~350 -->
 
 # RAG Spike Codemaps — Index
 
-**Last Updated:** 2026-04-01  
-**Total Modules:** 50+ files scanned  
-**Phases:** 1-6 (complete stack: benchmarks → API → TUI)
+**Last Updated:** 2026-04-01 (Updated: Phase 6 Phase 2 - Benchmarks & Results screens)  
+**Total Modules:** 54 files scanned  
+**Phases:** 1-6 (complete stack: benchmarks → API → TUI, Phase 6 Phase 2 complete)
 
 ## Quick Navigation
 
@@ -12,7 +12,7 @@
 |---------|----------|-------|------|
 | **[architecture.md](architecture.md)** | All (1-6) | Overall 6-phase structure, data flow, design patterns | ~800 tokens |
 | **[backend.md](backend.md)** | 4 | FastAPI routes, auth middleware, RBAC, RAG pipeline | ~650 tokens |
-| **[tui.md](tui.md)** | 6 | Textual TUI app, screens, widgets, navigation | ~700 tokens |
+| **[tui.md](tui.md)** | 6 | Textual TUI app, screens (Phase 1-2 complete), widgets, navigation | ~850 tokens |
 | **[benchmarks.md](benchmarks.md)** | 1-3.5 | ABC base classes, 4 vector DBs, 4 RAG frameworks, 6 embedding models, 4 LLM providers | ~750 tokens |
 | **[dependencies.md](dependencies.md)** | All | uv dependency groups, Docker services, API keys, configuration | ~600 tokens |
 
@@ -83,10 +83,11 @@ Comprehensive end-to-end testing:
 
 ### Phase 6: Textual TUI (`tui/`)
 
-Terminal user interface for interactive exploration:
-- **Dashboard** — System status, model info, quick stats
-- **Chat** — Message history, retrieved chunks, feedback
-- **Navigation** — F1-F7 keybindings, Login dialog
+Terminal user interface for interactive exploration — Phase 2 complete:
+- **Phase 1 (Complete):** Dashboard — System status, Chat — Message history + retrieval
+- **Phase 2 (Complete):** Benchmarks — Run 4 benchmark types, Results — View benchmark metrics
+- **Navigation** — F1-F7 keybindings, Login dialog, async subprocess streaming
+- **Widgets:** BenchmarkProgress (real-time output), ResultTable (DataTable wrapper)
 
 **Requires:** Running API server on localhost:8000  
 **CLI:** `make tui` or `python -m tui`
@@ -152,7 +153,7 @@ make test-integration         # Tests
 | Add new embedding model | `benchmarks/embedding-model/mymodel/model.py` |
 | Add new LLM provider | `benchmarks/llm-provider/myprovider/provider.py` |
 | Add new API endpoint | `api/routes/myroute.py` + register in `api/main.py` |
-| Add new TUI screen | `tui/screens/myscreen.py` + add to `tui/app.py` composition |
+| Add new TUI screen | `tui/screens/myscreen.py` + register in `tui/app.py` ContentSwitcher + add NavButton |
 | Change auth rules | `api/auth/models.py` (ROLE_PERMISSIONS, USER_ACCESS_LEVELS) |
 | Configure dependencies | `pyproject.toml` (modify `[dependency-groups]`) |
 
@@ -172,9 +173,9 @@ See **[dependencies.md](dependencies.md#configuration-files)** for:
 ## Document Maintenance
 
 These codemaps are **generated from the codebase** and updated regularly:
-- Last scanned: 2026-04-01
-- Files scanned: 50+
-- Coverage: All 6 phases (100%)
-- Token total: ~3,500 tokens (5 codemaps × ~700 avg)
+- Last scanned: 2026-04-01 (Updated for TUI Phase 2: Benchmarks & Results)
+- Files scanned: 50+ (added: tui/screens/benchmarks.py, tui/screens/results.py, tui/widgets/benchmark_progress.py, tui/widgets/result_table.py)
+- Coverage: All 6 phases (100%) — Phase 6 Phase 2 now complete
+- Token total: ~3,650 tokens (6 codemaps, tui.md expanded to ~850 tokens)
 
 **To regenerate:** See instructions in CONTRIBUTING.md (section "Generate Codemaps")

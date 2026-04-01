@@ -1,5 +1,5 @@
 .PHONY: help setup up-db down-db \
-        install install-rag install-embed install-llm install-api install-test install-tui \
+        install install-rag install-embed install-llm install-api install-test install-tui install-all \
         benchmark-quick benchmark-medium benchmark-all benchmark-db \
         rag-eval rag-eval-framework rag-eval-no-llm \
         embed-eval embed-eval-all embed-eval-model embed-eval-topk \
@@ -228,6 +228,9 @@ TUI_DIR = tui
 
 install-tui:
 	$(UV) sync --group tui
+
+install-all:
+	$(UV) sync --all-groups
 
 tui:
 	$(UV) run python -m tui

@@ -1,8 +1,8 @@
-<!-- Generated: 2026-04-01 | Files scanned: 13 | Token estimate: ~700 -->
+<!-- Generated: 2026-04-01 | Files scanned: 17 | Token estimate: ~850 -->
 
 # TUI (Terminal User Interface) Codemap
 
-**Last Updated:** 2026-04-01  
+**Last Updated:** 2026-04-01 (Updated for Phase 2: Benchmarks & Results)  
 **Phase:** 6 (Textual TUI application)  
 **Entry Points:** `tui/app.py` (RAGTuiApp), `python -m tui` or `make tui`
 
@@ -17,11 +17,11 @@ tui/app.py (RAGTuiApp — Textual App)
 │  │  └─ ContentSwitcher(id="content")   [Panel switcher]
 │  │     ├─ DashboardPanel (id="dashboard")      [Phase 1, implemented]
 │  │     ├─ ChatPanel (id="chat")                [Phase 1, implemented]
-│  │     ├─ PlaceholderPanel ("Benchmarks")      [Phase 2, stub]
-│  │     ├─ PlaceholderPanel ("Results")        [Phase 2, stub]
-│  │     ├─ PlaceholderPanel ("Documents")      [Phase 3, stub]
-│  │     ├─ PlaceholderPanel ("Tests")          [Phase 3, stub]
-│  │     └─ PlaceholderPanel ("Settings")       [Phase 4, stub]
+│  │     ├─ BenchmarksPanel (id="benchmarks")    [Phase 2, implemented ✓]
+│  │     ├─ ResultsPanel (id="results")          [Phase 2, implemented ✓]
+│  │     ├─ PlaceholderPanel ("Documents")       [Phase 3, stub]
+│  │     ├─ PlaceholderPanel ("Tests")           [Phase 3, stub]
+│  │     └─ PlaceholderPanel ("Settings")        [Phase 4, stub]
 │  │
 │  ├─ StatusBar(id="status-bar")        [bottom: connection status, user info]
 │  └─ Footer()                          [keybindings legend]
@@ -44,99 +44,149 @@ tui/app.py (RAGTuiApp — Textual App)
    └─ ... (one per binding)
 ```
 
-## Screens (Implemented)
+## Screens (Implemented & Phase 2 Complete)
 
-### DashboardPanel (`tui/screens/dashboard.py`)
+### Phase 1: Dashboard & Chat (Implemented)
 
+**DashboardPanel** (`tui/screens/dashboard.py`)
 ```
-Dashboard
 ├─ Title: "Dashboard"
-├─ Status box: API connection status + logged-in user info
-├─ Model info box: LLM provider, embedding model, vector DB
-├─ Quick stats: document count, indexed chunks, etc.
-└─ Instructions: "Use F1-F7 to navigate"
+├─ Status box: API connection + user info
+├─ Model info: LLM provider, embedding, vector DB
+├─ Stats: document count, chunks, index status
+└─ Instructions: keybinding reference
 ```
 
-### ChatPanel (`tui/screens/chat.py`)
-
+**ChatPanel** (`tui/screens/chat.py`)
 ```
-Chat
-├─ Message history (scrollable)
-│  ├─ ChatMessage (role="assistant", content="...", timestamp)
-│  ├─ ChatMessage (role="user", content="...", timestamp)
-│  └─ ... (history)
-│
-├─ Input box (bottom)
-│  └─ Text input for user query
-│
-├─ Retrieved chunks panel (right side, collapsible)
-│  └─ ChunkViewer (scrollable list of RetrievedChunk objects)
-│     ├─ [doc_id] title (access_level) — score: 0.95
-│     ├─ content preview...
-│     └─ [expand to see full content]
-│
-└─ Send button (or Enter key)
+├─ Message history (scrollable, per-session)
+├─ Input box: user query text field
+├─ Retrieved chunks pane (right side)
+│  └─ ChunkViewer: list with doc_id, score, preview
+└─ Send button (or Enter)
+```
+
+### Phase 2: Benchmark & Results (Implemented ✓)
+
+**BenchmarksPanel** (`tui/screens/benchmarks.py`)
+```
+BenchmarksPanel
+├─ TabbedContent(id="bench-tabs")
+│  ├─ _VectorDBTab
+│  │  ├─ Checkboxes: Qdrant, pgvector, Milvus, OpenSearch
+│  │  ├─ Input: N vectors (default 10000)
+│  │  ├─ Note: "Requires Docker: make up-db"
+│  │  ├─ Button: "Run Vector DB Benchmark"
+│  │  └─ BenchmarkProgress widget (RichLog + cancel)
+│  │
+│  ├─ _RAGFrameworkTab
+│  │  ├─ Checkboxes: bare_metal, LlamaIndex, LangChain, Haystack
+│  │  ├─ Checkbox: --no-llm (retrieval only)
+│  │  ├─ Note: "OPENROUTER_API_KEY required"
+│  │  ├─ Button: "Run RAG Framework Benchmark"
+│  │  └─ BenchmarkProgress widget
+│  │
+│  ├─ _EmbeddingModelTab
+│  │  ├─ Checkboxes: multilingual_e5, bge_m3, mxbai, openai_large, openai_small
+│  │  ├─ Input: top_k (default 3)
+│  │  ├─ Note: "OPENAI_API_KEY required for openai_* models"
+│  │  ├─ Button: "Run Embedding Benchmark"
+│  │  └─ BenchmarkProgress widget
+│  │
+│  └─ _LLMProviderTab
+│     ├─ API key status display (live check: OPENROUTER, OPENAI, ANTHROPIC, COHERE)
+│     ├─ Input: top_k (default 3)
+│     ├─ Button: "Run LLM Provider Benchmark"
+│     └─ BenchmarkProgress widget
+```
+
+**ResultsPanel** (`tui/screens/results.py`)
+```
+ResultsPanel
+├─ TabbedContent(id="results-tabs")
+│  ├─ _VectorDBResult (reads latest JSON from benchmarks/vector-db/results/)
+│  │  └─ ResultTable: Cols=[DB, Vectors, Idx(s), Throughput, p50(ms), p95(ms), p99(ms), QPS, Filter p95, Recall@10]
+│  │
+│  ├─ _RAGFrameworkResult (reads from benchmarks/rag-framework/results/)
+│  │  ├─ ResultTable: Indexing metrics [Framework, Chunks, Idx(ms), LOC]
+│  │  └─ ResultTable: Query latency [Framework, Min(ms), Avg(ms), Max(ms), p95(ms)]
+│  │
+│  ├─ _EmbeddingModelResult (reads from benchmarks/embedding-model/results/)
+│  │  ├─ ResultTable: Quality [Model, Thai Recall, Eng Recall, Overall, MRR]
+│  │  └─ ResultTable: Latency & Cost [Model, Idx(ms), Avg Query(ms), Cost/1M, Self-host]
+│  │
+│  └─ _LLMProviderResult (reads from benchmarks/llm-provider/results/)
+│     ├─ ResultTable: Quality [Provider, Overall F1, Thai F1, Questions]
+│     └─ ResultTable: Cost [Provider, Avg Lat(ms), Total Cost($), $/1M in, $/1M out]
 ```
 
 ## Widgets
 
-### ChatMessage (`tui/widgets/chat_message.py`)
+### Phase 1 Widgets
 
+**ChatMessage** (`tui/widgets/chat_message.py`)
+- Renders individual messages with role-specific styling
+- Timestamp display, word wrapping for long content
+
+**ChunkViewer** (`tui/widgets/chunk_viewer.py`)
+- Display list of RetrievedChunk objects
+- Shows: [doc_id] title (access_level) — score: 0.95
+- Expandable previews
+
+**LoginModal** (`tui/widgets/login_dialog.py`)
+- Modal dialog for JWT authentication
+- Username + Password inputs
+- Escape to cancel, Enter to submit
+
+**StatusBar** (`tui/widgets/status_bar.py`)
+- Bottom status bar showing connection + user state
+- Live updates: "✓ Connected — alice_admin" or "Not logged in — Press L"
+
+### Phase 2 Widgets (New)
+
+**BenchmarkProgress** (`tui/widgets/benchmark_progress.py`)
 ```python
-class ChatMessage(Static):
-    def __init__(self, role: str, content: str, timestamp: str | None = None):
-        # Render with role-specific styling (bold for assistant, normal for user)
-        # Include optional timestamp
-        # Handle long content with word wrap
+class BenchmarkProgress(Widget):
+    """Real-time subprocess output widget for benchmarks."""
+    
+    state: BenchmarkState  # IDLE, RUNNING, DONE, ERROR, CANCELLED
+    
+    compose() → ComposeResult:
+        └─ Horizontal (header)
+            ├─ Label: state indicator (Idle / ● Running… / ✓ Done / ✗ Error / ⊘ Cancelled)
+            └─ Button: Cancel (disabled when IDLE)
+        └─ RichLog: real-time output stream (highlight=True)
+    
+    run_command(cmd: list[str], cwd: str) → None
+        • Starts async subprocess
+        • Streams stdout line-by-line into RichLog
+        • Updates state label in real-time
+        • Exit code check: 0=Done, non-zero=Error
+    
+    _stream_subprocess() → @work(thread=True)
+        • Uses subprocess.Popen with start_new_session=True
+        • Kills process group on cancel() via SIGTERM
+        • Thread-safe updates via call_from_thread()
+    
+    Key: Benchmarks can run 5-30 min, widget shows live progress
 ```
 
-### ChunkViewer (`tui/widgets/chunk_viewer.py`)
-
+**ResultTable** (`tui/widgets/result_table.py`)
 ```python
-class ChunkViewer(Static):
-    """Display list of RetrievedChunk objects with expandable previews."""
-    def __init__(self, chunks: list[RetrievedChunk]):
-        # Render each chunk:
-        # [doc_id] title (access_level) — score: 0.95
-        # Content preview (first 100 chars)
-        # Expand button
-```
-
-### LoginModal (`tui/widgets/login_dialog.py`)
-
-```python
-class LoginModal(ModalScreen):
-    """Modal dialog for login."""
-    BINDINGS = [
-        ("escape", "cancel_login", "Cancel"),
-        ("enter", "submit_login", "Login"),
-    ]
-
-    def compose(self) -> ComposeResult:
-        yield Input(id="username", placeholder="Username")
-        yield Input(id="password", placeholder="Password")
-        yield Button("Login", variant="primary")
-        yield Button("Cancel")
-
-    async def on_button_pressed(self, event: Button.Pressed):
-        if event.button.id == "login-btn":
-            username = self.query_one("#username", Input).value
-            password = self.query_one("#password", Input).value
-            # Call client.login(username, password)
-            # Update status bar + dismiss modal
-```
-
-### StatusBar (`tui/widgets/status_bar.py`)
-
-```python
-class StatusBar(Static):
-    """Bottom status bar showing connection + user state."""
-    def render(self) -> str:
-        if client.is_logged_in:
-            user = client.current_user["username"]
-            return f"[bold green]✓[/bold green] Connected — {user}"
-        else:
-            return "[dim]Not logged in — Press L to login[/dim]"
+class ResultTable(Widget):
+    """Thin DataTable wrapper for benchmark results."""
+    
+    compose() → ComposeResult:
+        ├─ Label: title (optional, e.g., "Indexing", "Query Latency")
+        └─ DataTable: columns + rows
+    
+    load(columns: list[str], rows: list[list]) → None
+        • Clear existing data
+        • Add column headers
+        • Add rows (auto-stringify)
+        
+    Usage: Each ResultsPanel tab uses 1-2 ResultTable widgets
+    Data source: Latest JSON in benchmarks/*/results/ directory
 ```
 
 ## HTTP Client (`tui/client.py`)
@@ -208,13 +258,24 @@ Start
   ↓
 [Login Dialog] ← Press L, Escape to cancel
   ↓
-[Dashboard] (F1) ← Default screen
+[Dashboard] (F1) ← Default screen, system status
   ↓ F2
-[Chat] ← Send query
-  ↓ (see retrieved chunks in right pane)
-[Results] (F4) ← View all retrieved chunks
-  ↓ F3-F7
-[Benchmarks / Documents / Tests / Settings] (Phase 2-4, stubs)
+[Chat] (F2) ← RAG query + retrieved chunks
+  ↓
+[Benchmarks] (F3) ← Phase 2: Run or monitor benchmarks (4 tabs)
+  │  └─ Select vector DBs / frameworks / models / providers → click Run
+  │     └─ BenchmarkProgress widget streams live output
+  │        └─ Live result JSON written to benchmarks/*/results/
+  ↓
+[Results] (F4) ← Phase 2: View latest benchmark JSON results (4 tabs)
+  │  └─ Auto-loads latest JSON from benchmarks/*/results/ directories
+  │     └─ ResultTable widgets display metrics tables
+  ↓
+[Documents] (F5) ← Phase 3, stub
+  ↓
+[Tests] (F6) ← Phase 3, stub
+  ↓
+[Settings] (F7) ← Phase 4, stub
   ↓ Q
 [Quit]
 ```

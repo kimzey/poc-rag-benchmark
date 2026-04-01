@@ -56,8 +56,13 @@ def run_single(
     filtered_queries,
     ground_truth,
     n_vectors: int,
+    quiet: bool = False,
 ) -> BenchmarkResult | None:
     db = client.name
+
+    def step(msg: str) -> None:
+        if quiet:
+            console.print(f"  {msg}")
 
     # ── Connect ──────────────────────────────────────────────────────
     console.print(f"\n[bold cyan]▶ {db}[/bold cyan]")
@@ -67,23 +72,28 @@ def run_single(
             TextColumn("[progress.description]{task.description}"),
             TimeElapsedColumn(),
             console=console,
+            disable=quiet,
         ) as progress:
 
             t = progress.add_task("Connecting …", total=None)
+            step("Connecting …")
             client.connect()
             progress.update(t, description="Connected")
 
             # ── Create collection ────────────────────────────────────
             progress.update(t, description="Creating collection …")
+            step("Creating collection …")
             client.create_collection("spike_benchmark")
 
             # ── Insert ───────────────────────────────────────────────
             progress.update(t, description=f"Inserting {n_vectors:,} vectors …")
+            step(f"Inserting {n_vectors:,} vectors …")
             t0 = time.perf_counter()
             client.insert(dataset)
             index_time = time.perf_counter() - t0
             index_throughput = n_vectors / index_time
             progress.update(t, description=f"Indexed {n_vectors:,} → {index_throughput:,.0f} vec/s")
+            step(f"Indexed → {index_throughput:,.0f} vec/s")
 
             # Verify
             count = client.count()
@@ -92,6 +102,7 @@ def run_single(
 
             # ── ANN search latency ────────────────────────────────────
             progress.update(t, description="Measuring ANN latency …")
+            step("Measuring ANN latency …")
             search_times = []
             result_ids: list[list[str]] = []
             for q in queries[:N_QUERY_RUNS]:
@@ -104,6 +115,7 @@ def run_single(
 
             # ── Filtered search latency ───────────────────────────────
             progress.update(t, description="Measuring filtered search latency …")
+            step("Measuring filtered search latency …")
             filter_times = []
             for q in filtered_queries[:FILTER_RUNS]:
                 t0 = time.perf_counter()
@@ -116,12 +128,15 @@ def run_single(
             recall = None
             if ground_truth:
                 progress.update(t, description="Computing recall@10 …")
+                step("Computing recall@10 …")
                 recall = compute_recall(result_ids, ground_truth[:N_QUERY_RUNS])
 
             # ── Cleanup ───────────────────────────────────────────────
             progress.update(t, description="Cleaning up …")
+            step("Cleaning up …")
             client.drop_collection()
             progress.update(t, description="[green]Done[/green]")
+            step("[green]Done ✓[/green]")
 
     except Exception as exc:
         console.print(f"  [red]ERROR: {exc}[/red]")
@@ -178,6 +193,7 @@ def main():
     parser.add_argument("--skip", nargs="*", default=[], help="Skip these DBs")
     parser.add_argument("--n", type=int, default=10_000, help="Number of vectors (default 10000)")
     parser.add_argument("--list", action="store_true", help="List available DB adapters")
+    parser.add_argument("--quiet", action="store_true", help="Minimal output (for TUI/pipe)")
     args = parser.parse_args()
 
     if args.list:
@@ -213,7 +229,7 @@ def main():
     # ── Run benchmarks ────────────────────────────────────────────────
     results = []
     for key, cls in selected.items():
-        result = run_single(cls(), dataset, search_queries, filter_queries, ground_truth, n_vectors)
+        result = run_single(cls(), dataset, search_queries, filter_queries, ground_truth, n_vectors, quiet=args.quiet)
         if result:
             results.append(result)
 

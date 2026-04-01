@@ -21,15 +21,15 @@ from textual.widgets import (
 
 from tui.client import RAGClient
 from tui.config import settings
+from tui.screens.benchmarks import BenchmarksPanel
 from tui.screens.chat import ChatPanel
 from tui.screens.dashboard import DashboardPanel
+from tui.screens.results import ResultsPanel
 from tui.widgets.login_dialog import LoginModal
 from tui.widgets.status_bar import StatusBar
 
 # Panels not yet implemented — show placeholder
 _PLACEHOLDER_PANELS = [
-    ("benchmarks", "Benchmarks", "Phase 2"),
-    ("results", "Results", "Phase 2"),
     ("documents", "Documents", "Phase 3"),
     ("tests", "Tests", "Phase 3"),
     ("settings", "Settings", "Phase 4"),
@@ -95,6 +95,8 @@ class RAGTuiApp(App):
             with ContentSwitcher(id="content", initial="dashboard"):
                 yield DashboardPanel(id="dashboard")
                 yield ChatPanel(id="chat")
+                yield BenchmarksPanel(id="benchmarks")
+                yield ResultsPanel(id="results")
                 for panel_id, title, phase in _PLACEHOLDER_PANELS:
                     yield PlaceholderPanel(title, phase, id=panel_id)
         yield StatusBar(id="status-bar")
