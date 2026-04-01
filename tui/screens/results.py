@@ -97,7 +97,7 @@ class _VectorDBResult(ScrollableContainer):
 
     @on(Select.Changed, "#vdb-file-sel")
     def on_file_changed(self, event: Select.Changed) -> None:
-        if event.value is not Select.BLANK:
+        if isinstance(event.value, Path):
             self._load(event.value)
 
     def compose(self) -> ComposeResult:
@@ -171,7 +171,7 @@ class _RAGFrameworkResult(ScrollableContainer):
 
     @on(Select.Changed, "#rag-file-sel")
     def on_file_changed(self, event: Select.Changed) -> None:
-        if event.value is not Select.BLANK:
+        if isinstance(event.value, Path):
             self._load(event.value)
 
     def compose(self) -> ComposeResult:
@@ -254,7 +254,7 @@ class _EmbeddingModelResult(ScrollableContainer):
 
     @on(Select.Changed, "#emb-file-sel")
     def on_file_changed(self, event: Select.Changed) -> None:
-        if event.value is not Select.BLANK:
+        if isinstance(event.value, Path):
             self._load(event.value)
 
     def compose(self) -> ComposeResult:
@@ -326,7 +326,7 @@ class _LLMProviderResult(ScrollableContainer):
 
     @on(Select.Changed, "#llm-file-sel")
     def on_file_changed(self, event: Select.Changed) -> None:
-        if event.value is not Select.BLANK:
+        if isinstance(event.value, Path):
             self._load(event.value)
 
     def compose(self) -> ComposeResult:

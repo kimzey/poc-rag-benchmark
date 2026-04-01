@@ -1,6 +1,7 @@
 """Chunk viewer widget — shows retrieved chunks with scores and access levels."""
 from __future__ import annotations
 
+from rich.markup import escape
 from textual.app import ComposeResult
 from textual.containers import ScrollableContainer
 from textual.widget import Widget
@@ -20,11 +21,12 @@ class ChunkItem(Static):
         color = _LEVEL_COLOR.get(chunk.access_level, "white")
         filled = int(chunk.score * 10)
         bar = "█" * filled + "░" * (10 - filled)
-        preview = chunk.content[:120].replace("\n", " ")
+        preview = escape(chunk.content[:120].replace("\n", " "))
+        title = escape(chunk.title)
         markup = (
-            f"[bold]{num}. {chunk.title}[/bold]\n"
+            f"[bold]{num}. {title}[/bold]\n"
             f"[{color}]{bar}[/{color}] {chunk.score:.2f} "
-            f"[[{color}]{chunk.access_level}[/{color}]]\n"
+            f"[{color}][[{chunk.access_level}]][/{color}]\n"
             f"[dim]{preview}…[/dim]"
         )
         super().__init__(markup, classes="chunk-item")
