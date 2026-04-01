@@ -89,12 +89,12 @@ BenchmarksPanel
 │  ├─ _EmbeddingModelTab
 │  │  ├─ Checkboxes: multilingual_e5, bge_m3, mxbai, wangchanberta, openai_large, openai_small, cohere_v3
 │  │  ├─ Input: top_k (default 3)
-│  │  ├─ Note: "OPENAI_API_KEY / COHERE_API_KEY required for api models"
+│  │  ├─ Note: "OPENROUTER_API_KEY / COHERE_API_KEY required for api models"
 │  │  ├─ Button: "Run Embedding Benchmark"
 │  │  └─ BenchmarkProgress widget
 │  │
 │  └─ _LLMProviderTab
-│     ├─ API key status display (live check: OPENROUTER, OPENAI, ANTHROPIC, COHERE)
+│     ├─ API key status display (live check: OPENROUTER, ANTHROPIC, COHERE)
 │     ├─ Input: top_k (default 3)
 │     ├─ Button: "Run LLM Provider Benchmark"
 │     └─ BenchmarkProgress widget

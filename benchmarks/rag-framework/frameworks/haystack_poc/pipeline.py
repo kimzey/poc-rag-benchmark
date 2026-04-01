@@ -61,7 +61,8 @@ class HaystackRAGPipeline(BaseRAGPipeline):
             from haystack.utils import Secret
             self._doc_embedder = OpenAIDocumentEmbedder(
                 model=config.EMBEDDING_MODEL,
-                api_key=Secret.from_token(config.OPENAI_API_KEY),
+                api_key=Secret.from_token(config.OPENROUTER_API_KEY),
+                api_base_url=config.OPENROUTER_BASE_URL,
             )
         else:
             from haystack.components.embedders import SentenceTransformersDocumentEmbedder
@@ -112,7 +113,8 @@ class HaystackRAGPipeline(BaseRAGPipeline):
             from haystack.components.embedders import OpenAITextEmbedder
             query_embedder = OpenAITextEmbedder(
                 model=config.EMBEDDING_MODEL,
-                api_key=Secret.from_token(config.OPENAI_API_KEY),
+                api_key=Secret.from_token(config.OPENROUTER_API_KEY),
+                api_base_url=config.OPENROUTER_BASE_URL,
             )
         else:
             from haystack.components.embedders import SentenceTransformersTextEmbedder

@@ -7,7 +7,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ── API Keys (optional — models skip gracefully if key missing) ───────────────
-OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
+OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
 COHERE_API_KEY: str = os.getenv("COHERE_API_KEY", "")
 
 # ── Chunking (keep same as Phase 2 for fair comparison) ───────────────────────

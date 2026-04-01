@@ -54,7 +54,9 @@ class LlamaIndexRAGPipeline(BaseRAGPipeline):
         if config.EMBEDDING_MODEL.startswith("text-embedding"):
             from llama_index.embeddings.openai import OpenAIEmbedding
             Settings.embed_model = OpenAIEmbedding(
-                model=config.EMBEDDING_MODEL, api_key=config.OPENAI_API_KEY
+                model=config.EMBEDDING_MODEL,
+                api_key=config.OPENROUTER_API_KEY,
+                api_base=config.OPENROUTER_BASE_URL,
             )
         else:
             from llama_index.embeddings.huggingface import HuggingFaceEmbedding

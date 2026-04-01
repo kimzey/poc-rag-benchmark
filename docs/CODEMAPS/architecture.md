@@ -32,7 +32,7 @@ spike-rak/
 │         └─ HaystackRAGPipeline    (DAG pipeline, InMemoryDocumentStore)
 │   Data: Thai + English + Mixed documents (3 docs, 10 questions)
 │   LLM: OpenRouter (configurable model)
-│   Embeddings: sentence-transformers (local, no API key)
+│   Embeddings: OpenRouter → text-embedding-3-small (all 4 frameworks)
 │
 ├── [Phase 3 🔄] Embedding Model Comparison ─────────────────────
 │   benchmarks/embedding-model/evaluate.py
@@ -42,8 +42,8 @@ spike-rak/
 │         ├─ MxbaiEmbedLargeModel      (mixedbread-ai/mxbai-embed-large-v1)
 │         ├─ WangchanBERTaModel        (airesearch/wangchanberta-base-att-spm-uncased, Thai-specific, 768-dim)
 │         ├─ CohereEmbedV3Model        (embed-multilingual-v3.0, 1024-dim, $0.10/1M)
-│         ├─ OpenAILargeModel          (text-embedding-3-large)
-│         └─ OpenAISmallModel          (text-embedding-3-small)
+│         ├─ OpenAILargeModel          (text-embedding-3-large, via OpenRouter)
+│         └─ OpenAISmallModel          (text-embedding-3-small, via OpenRouter)
 │   Data: Same 3 Thai/English/mixed docs from Phase 2 (reused corpus)
 │   Metrics: Recall@k, MRR, latency, cost, self-hostability, weighted scorecard
 │

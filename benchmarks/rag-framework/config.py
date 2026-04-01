@@ -15,11 +15,10 @@ LLM_MODEL: str = os.getenv("RAG_LLM_MODEL", "anthropic/claude-3-haiku")
 # Local (sentence-transformers, no key needed):
 #   all-MiniLM-L6-v2              → fast, English-focused (~80MB)
 #   intfloat/multilingual-e5-small → Thai+English (~470MB)
-# OpenAI API (requires OPENAI_API_KEY):
-#   text-embedding-3-small        → 1536 dims, $0.02/1M tokens
-#   text-embedding-3-large        → 3072 dims, $0.13/1M tokens
+# OpenRouter API (requires OPENROUTER_API_KEY):
+#   text-embedding-3-small        → 1536 dims, via OpenRouter
+#   text-embedding-3-large        → 3072 dims, via OpenRouter
 EMBEDDING_MODEL: str = os.getenv("RAG_EMBEDDING_MODEL", "all-MiniLM-L6-v2")
-OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
 
 # ── Chunking ──────────────────────────────────────────────────────────────────
 CHUNK_SIZE: int = int(os.getenv("RAG_CHUNK_SIZE", "500"))

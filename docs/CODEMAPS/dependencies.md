@@ -2,7 +2,7 @@
 
 # Dependencies & External Services Codemap
 
-**Last Updated:** 2026-04-01 (Stable since Phase 6 completed)  
+**Last Updated:** 2026-04-01 (Removed OPENAI_API_KEY — all embeddings route via OpenRouter)  
 **Tool:** uv (Python 3.11+), Docker Compose, Makefile
 
 ## Dependency Groups (uv)
@@ -179,13 +179,13 @@ Or via Makefile: `make up-db`, `make down-db`, `make logs-db`
 
 **Endpoint:** `https://openrouter.ai/api/v1`
 
-**Models Available:**
-- `anthropic/claude-3.5-sonnet` (default in Phase 4)
-- `openai/gpt-4-turbo`
-- `google/gemini-pro`
-- `meta-llama/llama3.1-405b`
-- `deepseek/deepseek-chat`
+**Models Available (LLM + Embeddings):**
+- `openai/gpt-4o-mini`, `anthropic/claude-3.5-sonnet`, `google/gemini-flash-1.5`
+- `openai/text-embedding-3-small`, `openai/text-embedding-3-large` (embeddings)
 - ... and many others
+
+**Note:** OpenRouter is the **single API gateway** for both LLM and embedding calls.
+No direct `OPENAI_API_KEY` is needed — all OpenAI model access goes through OpenRouter.
 
 **Environment Variables:**
 ```
@@ -199,21 +199,6 @@ OPENROUTER_MODEL=anthropic/claude-3.5-sonnet      (default)
 2. Create API key at https://openrouter.ai/keys
 3. Add to `.env`: `OPENROUTER_API_KEY=sk-...`
 4. Copy `.env.example` as starting point: `cp .env.example .env`
-
-### OpenAI Direct (for embedding models)
-
-**Used By:** Phase 3 embedding benchmark, Phase 4 (optionally)
-
-**Endpoint:** `https://api.openai.com/v1`
-
-**Models:**
-- `text-embedding-3-small` (1536 dims, $0.02/1M)
-- `text-embedding-3-large` (3072 dims, $0.13/1M)
-
-**Environment Variables:**
-```
-OPENAI_API_KEY=sk-...
-```
 
 ### Anthropic Claude Direct (for LLM provider benchmark)
 
@@ -293,10 +278,7 @@ OPENROUTER_API_KEY=sk-...
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 OPENROUTER_MODEL=anthropic/claude-3.5-sonnet
 
-# OpenAI (embedding models)
-OPENAI_API_KEY=sk-...
-
-# Anthropic (LLM provider comparison)
+# Anthropic (LLM provider comparison — direct, not via OpenRouter)
 ANTHROPIC_API_KEY=sk-ant-...
 
 # Cohere (embedding model comparison)

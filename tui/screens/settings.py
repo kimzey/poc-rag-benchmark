@@ -15,7 +15,6 @@ from tui.config import settings as tui_settings
 
 _ENV_KEYS: list[tuple[str, str]] = [
     ("OPENROUTER_API_KEY", "OPENROUTER"),
-    ("OPENAI_API_KEY", "OPENAI"),
     ("ANTHROPIC_API_KEY", "ANTHROPIC"),
     ("COHERE_API_KEY", "COHERE"),
     ("LINE_CHANNEL_SECRET", "LINE"),

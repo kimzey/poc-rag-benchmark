@@ -1,261 +1,95 @@
 CODEMAP UPDATE REPORT
-Generated: 2026-04-01 (Phase 6 Phase 2 Implementation)
-Updated By: Claude Code (Haiku 4.5)
+Generated: 2026-04-01 (OpenRouter-only migration)
+Updated By: Claude Code (claude-sonnet-4-6)
 
 ================================================================================
 SUMMARY
 ================================================================================
 
-Updated 2 codemaps in docs/CODEMAPS/ to reflect Phase 6 Phase 2 implementation
-(Benchmarks & Results TUI screens with subprocess management and result parsing).
+Updated 4 codemaps in docs/CODEMAPS/ to reflect migration from direct OpenAI API
+to routing all embedding calls through OpenRouter. No new architecture — same
+models, different API gateway.
 
-Files Updated:
-  ✓ docs/CODEMAPS/tui.md           (expanded from ~700 to ~850 tokens)
-  ✓ docs/CODEMAPS/INDEX.md         (updated index and navigation refs)
+Codemaps Updated:
+  ✓ docs/CODEMAPS/dependencies.md  — removed OpenAI Direct section, updated OpenRouter description
+  ✓ docs/CODEMAPS/architecture.md  — Phase 2 & 3 embedding notes updated
+  ✓ docs/CODEMAPS/benchmarks.md    — OpenAI model table: added "(via OpenRouter)"
+  ✓ docs/CODEMAPS/tui.md           — EmbeddingModelTab + LLMProviderTab key list updated
 
-New Files Tracked:
-  + tui/screens/benchmarks.py       (BenchmarksPanel with 4 benchmark tabs)
-  + tui/screens/results.py          (ResultsPanel with 4 result viewer tabs)
-  + tui/widgets/benchmark_progress.py (BenchmarkProgress: subprocess streaming)
-  + tui/widgets/result_table.py     (ResultTable: DataTable wrapper)
-
-================================================================================
-DETAILED CHANGES
-================================================================================
-
-1. TUI.MD — EXPANDED FOR PHASE 2 IMPLEMENTATION
-   ─────────────────────────────────────────────
-
-   Before: Marked Benchmarks & Results as "Phase 2, stub"
-   After:  Marked as "Phase 2, implemented ✓" with complete documentation
-
-   Sections Expanded:
-
-   a) Application Architecture (Header Updated)
-      - Changed from "PlaceholderPanel ('Benchmarks')" to "BenchmarksPanel (implemented ✓)"
-      - Changed from "PlaceholderPanel ('Results')" to "ResultsPanel (implemented ✓)"
-
-   b) Screens Section (MAJOR EXPANSION)
-      - Reorganized into "Phase 1: Dashboard & Chat (Implemented)" + "Phase 2: Benchmark & Results (Implemented ✓)"
-      - Added full BenchmarksPanel architecture:
-        * 4 TabbedContent tabs: Vector DB, RAG Framework, Embedding Model, LLM Provider
-        * Each tab: Checkboxes for selection + Input fields for parameters + Run button + BenchmarkProgress widget
-        * Example tab structure (VectorDBTab):
-          └─ Checkboxes: Qdrant, pgvector, Milvus, OpenSearch (all default=True)
-          └─ Input: N vectors (default 10000, validates digits only)
-          └─ Note: "Requires Docker: make up-db"
-          └─ BenchmarkProgress widget for live output
-      - Added full ResultsPanel architecture:
-        * 4 TabbedContent tabs reading latest JSON from benchmarks/*/results/ directories
-        * Each tab: 1-2 ResultTable widgets displaying metrics
-        * Example columns (Vector DB): [DB, Vectors, Idx(s), Throughput, p50(ms), p95(ms), p99(ms), QPS, Filter p95, Recall@10]
-        * Dynamic JSON parsing with formatting helpers (_fmt, _latest_json)
-
-   c) Widgets Section (NEW: BenchmarkProgress & ResultTable)
-      - Reorganized into "Phase 1 Widgets" + "Phase 2 Widgets (New)"
-      - BenchmarkProgress:
-        * State machine: BenchmarkState enum (IDLE, RUNNING, DONE, ERROR, CANCELLED)
-        * Async subprocess management with start_new_session=True for process group kill
-        * Real-time streaming: subprocess.Popen → RichLog via thread-safe call_from_thread()
-        * Cancel button: SIGTERM on process group, fallback to terminate()
-        * Key design: Benchmarks run 5-30 min, widget shows live progress
-        * Thread worker via @work(thread=True) decorator
-      - ResultTable:
-        * Thin wrapper around Textual DataTable
-        * Accepts columns: list[str] and rows: list[list]
-        * Auto-stringifies row values
-        * Used in ResultsPanel for displaying metrics
-
-   d) Navigation Flow (UPDATED)
-      - Added explicit mention of Benchmarks (F3) → "Run benchmarks, select options, click Run, see BenchmarkProgress"
-      - Added Results (F4) → "Auto-loads latest JSON from benchmarks/*/results/, displays ResultTable"
-      - Shows cycle: Benchmarks (select + run) → live output stream → JSON written → Results (auto-load)
-
-   e) File Count & Token Estimate
-      - Updated header from ~700 tokens to ~850 tokens
-      - Updated file count from 13 to 17 (added 4 new files)
-
-2. INDEX.MD — UPDATED REFERENCES
-   ────────────────────────────────
-
-   a) Header
-      - Updated timestamp with note about Phase 6 Phase 2 completion
-      - Updated file count from 50 to 54 files
-      - Updated token estimate from ~3,500 to ~3,650 tokens
-      - Added "Phase 6 Phase 2 complete" to phases line
-
-   b) TUI.md Reference
-      - Updated description from "~700 tokens" to "~850 tokens"
-      - Updated scope: "Phase 1-2 complete" instead of just "Textual TUI app"
-
-   c) Phase 6 Description (Major Update)
-      - Changed from "2 implemented screens" to "Phase 2 complete"
-      - Now lists:
-        * Phase 1 (Complete): Dashboard, Chat
-        * Phase 2 (Complete): Benchmarks, Results
-      - Added widget mentions: BenchmarkProgress, ResultTable
-      - Added note about "async subprocess streaming"
-
-   d) Key Files by Responsibility
-      - Updated "Add new TUI screen" entry to include "register in ContentSwitcher + add NavButton"
-
-   e) Document Maintenance section
-      - Updated scan notes: "added: tui/screens/benchmarks.py, tui/screens/results.py, tui/widgets/benchmark_progress.py, tui/widgets/result_table.py"
-      - Updated token total to reflect tui.md expansion
+Diff: ~12% content change across 4 codemaps (under 30% threshold — updated in place)
 
 ================================================================================
-IMPLEMENTATION DETAILS CAPTURED
+SOURCE CODE CHANGES
 ================================================================================
 
-BenchmarksPanel Architecture:
-  • Entry point: tui/screens/benchmarks.py, class BenchmarksPanel(Widget)
-  • Uses TabbedContent(id="bench-tabs") with 4 TabPane children
-  • Tab 1 (_VectorDBTab):
-    - Checkboxes for: Qdrant, pgvector, Milvus, OpenSearch (ids: vdb-qdrant, vdb-pgvector, vdb-milvus, vdb-opensearch)
-    - Input for N vectors (id: vdb-n, default "10000", restricted to digits)
-    - Button "Run Vector DB Benchmark" triggers _uv_run("python", "benchmarks/vector-db/run_benchmark.py", "--n-vectors", n)
-    - BenchmarkProgress widget receives command and cwd=project_root
-  • Tab 2 (_RAGFrameworkTab):
-    - Checkboxes for: bare_metal, LlamaIndex, LangChain, Haystack
-    - Checkbox: --no-llm (retrieval only)
-    - Button triggers evaluate.py with --frameworks flag + selected names
-  • Tab 3 (_EmbeddingModelTab):
-    - Checkboxes for: multilingual_e5, bge_m3, mxbai, openai_large, openai_small
-    - Input for top_k (default 3)
-    - Button triggers evaluate.py with --models + --top-k
-  • Tab 4 (_LLMProviderTab):
-    - Live API key status display (checks: OPENROUTER_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY, COHERE_API_KEY)
-    - Input for top_k
-    - Button triggers evaluate.py with --top-k
+Files Modified:
+  benchmarks/rag-framework/config.py
+    - removed: OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+    - comment updated to say "OpenRouter API (requires OPENROUTER_API_KEY)"
 
-ResultsPanel Architecture:
-  • Entry point: tui/screens/results.py, class ResultsPanel(Widget)
-  • Uses TabbedContent(id="results-tabs") with 4 TabPane children
-  • Tab 1 (_VectorDBResult):
-    - Helper: _latest_json(Path) → dict | None (searches *.json by mtime, returns newest)
-    - Reads: benchmarks/vector-db/results/*.json
-    - Displays columns: DB, Vectors, Idx(s), Throughput, p50(ms), p95(ms), p99(ms), QPS, Filter p95, Recall@10
-    - Parses: r.get("search_latency", {}) for percentiles, r.get("recall_at_10"), etc.
-    - Helper: _fmt(val, decimals) → formats floats or returns "—" for None
-  • Tab 2 (_RAGFrameworkResult):
-    - Reads: benchmarks/rag-framework/results/*.json
-    - Displays 2 ResultTable widgets:
-      * Indexing: [Framework, Chunks, Idx(ms), LOC]
-      * Query Latency: [Framework, Min(ms), Avg(ms), Max(ms), p95(ms)]
-    - Parses: r.get("indexing_time_ms"), r.get("queries", []) list
-  • Tab 3 (_EmbeddingModelResult):
-    - Reads: benchmarks/embedding-model/results/*.json
-    - Displays 2 ResultTable widgets:
-      * Quality: [Model, Thai Recall, Eng Recall, Overall, MRR]
-      * Latency & Cost: [Model, Idx(ms), Avg Query(ms), Cost/1M, Self-host]
-  • Tab 4 (_LLMProviderResult):
-    - Reads: benchmarks/llm-provider/results/*.json
-    - Displays 2 ResultTable widgets:
-      * Quality: [Provider, Overall F1, Thai F1, Questions]
-      * Cost: [Provider, Avg Lat(ms), Total Cost($), $/1M in, $/1M out]
+  benchmarks/rag-framework/frameworks/bare_metal/pipeline.py
+    - embed client: OpenAI(api_key=config.OPENAI_API_KEY)
+      → OpenAI(api_key=config.OPENROUTER_API_KEY, base_url=config.OPENROUTER_BASE_URL)
 
-BenchmarkProgress Widget:
-  • State machine: BenchmarkState(Enum) with values IDLE, RUNNING, DONE, ERROR, CANCELLED
-  • Render:
-    - Horizontal header: Label (state indicator) + Button (Cancel, disabled when IDLE)
-    - RichLog: real-time output (highlight=True, markup=True, wrap=True)
-  • API:
-    - run_command(cmd: list[str], cwd: str | None) → starts subprocess
-    - cancel() → public cancel method
-  • Implementation:
-    - _stream_subprocess(cmd, cwd) → @work(thread=True) decorator (runs on thread worker)
-    - Uses subprocess.Popen(cmd, start_new_session=True) to create process group
-    - On cancel: os.killpg(os.getpgid(pid), signal.SIGTERM) or fallback terminate()
-    - Thread-safe updates: app.call_from_thread(query_one, "#bp-log", RichLog).write(line)
-    - Exit code check: 0 → Done, non-zero → Error, or state==CANCELLED → Cancelled
+  benchmarks/rag-framework/frameworks/llamaindex_poc/pipeline.py
+    - OpenAIEmbedding(model=..., api_key=config.OPENAI_API_KEY)
+      → OpenAIEmbedding(model=..., api_key=config.OPENROUTER_API_KEY, api_base=config.OPENROUTER_BASE_URL)
 
-ResultTable Widget:
-  • Simple wrapper around DataTable
-  • Init: title: str = "" (optional label)
-  • Compose: Label (if title) + DataTable(id="dt")
-  • API: load(columns: list[str], rows: list[list]) → clears + reloads data
-  • DataTable.add_columns(*columns), then for each row: add_row(*[str(v) for v in row])
+  benchmarks/rag-framework/frameworks/langchain_poc/pipeline.py
+    - OpenAIEmbeddings(model=..., openai_api_key=config.OPENAI_API_KEY)
+      → OpenAIEmbeddings(model=..., openai_api_key=config.OPENROUTER_API_KEY, openai_api_base=config.OPENROUTER_BASE_URL)
+
+  benchmarks/rag-framework/frameworks/haystack_poc/pipeline.py (2 changes)
+    - OpenAIDocumentEmbedder(api_key=Secret.from_token(config.OPENAI_API_KEY))
+      → OpenAIDocumentEmbedder(api_key=...(OPENROUTER_API_KEY), api_base_url=OPENROUTER_BASE_URL)
+    - OpenAITextEmbedder(api_key=Secret.from_token(config.OPENAI_API_KEY))
+      → OpenAITextEmbedder(api_key=...(OPENROUTER_API_KEY), api_base_url=OPENROUTER_BASE_URL)
+
+  benchmarks/embedding-model/config.py
+    - removed: OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+    - added:   OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
+               OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+
+  benchmarks/embedding-model/models/openai_small.py
+    - guard: if not config.OPENAI_API_KEY → if not config.OPENROUTER_API_KEY
+    - client: OpenAI(api_key=config.OPENAI_API_KEY) → OpenAI(api_key=OPENROUTER_API_KEY, base_url=OPENROUTER_BASE_URL)
+    - model: "text-embedding-3-small" → "openai/text-embedding-3-small"
+
+  benchmarks/embedding-model/models/openai_large.py
+    - same pattern as openai_small.py
+    - model: "text-embedding-3-large" → "openai/text-embedding-3-large"
+
+  .env
+    - OPENAI_API_KEY: replaced real key with comment "# not needed — use OpenRouter"
+    - RAG_EMBEDDING_MODEL: kept as "text-embedding-3-small" (startswith check still works)
+
+  tui/screens/settings.py
+    - _ENV_KEYS: removed ("OPENAI_API_KEY", "OPENAI") entry
+
+  tui/widgets/chunk_viewer.py (bug fix, separate from OpenRouter migration)
+    - Rich markup: [[{color}]{text}[/{color}]] → [{color}][[{text}]][/{color}]
+    - Fix: closing tag [/red] had no matching open tag → MarkupError crash on chat screen
 
 ================================================================================
-DATA FLOW PATTERNS
+ARCHITECTURE CHANGE NOTE
 ================================================================================
 
-Benchmark Execution:
-  BenchmarksPanel (user selects options)
-    ↓
-  Button.Pressed event → run_vdb() (or run_rag, run_emb, run_llm)
-    ↓
-  Build command: uv run python benchmarks/*/evaluate.py --args
-    ↓
-  BenchmarkProgress.run_command(cmd, cwd)
-    ↓
-  _stream_subprocess() @work(thread=True)
-    ├─ subprocess.Popen() with start_new_session=True
-    ├─ Read stdout line-by-line
-    └─ app.call_from_thread() → RichLog.write() (main thread)
-    ↓
-  Benchmark script writes result JSON to benchmarks/*/results/TIMESTAMP.json
-    ↓
-  User clicks Results tab
-    ↓
-  ResultsPanel.on_show() → _load()
-    ├─ _latest_json(directory) finds newest *.json
-    ├─ Parse JSON → extract metrics
-    └─ ResultTable.load() → DataTable.add_columns() + add_rows()
-    ↓
-  Metrics displayed in tabular format
+Before: Two API gateways
+  LLM calls     → OpenRouter (https://openrouter.ai/api/v1)
+  Embedding calls (OpenAI models) → OpenAI direct (https://api.openai.com/v1)
+
+After: Single API gateway
+  LLM calls     → OpenRouter
+  Embedding calls → OpenRouter
+
+The startswith("text-embedding") check in all 4 RAG framework pipelines routes
+to the OpenAI-compatible embedding path. Model name stays "text-embedding-3-small"
+(without "openai/" prefix) for framework compatibility.
+
+The Phase 3 embedding benchmark models (openai_small.py, openai_large.py) use
+the "openai/text-embedding-3-small" prefix as required by OpenRouter's embedding endpoint.
 
 ================================================================================
-VERIFICATION CHECKLIST
+NO NEW DEPENDENCIES
 ================================================================================
-
-[✓] All new file paths verified (4 files exist)
-[✓] TUI app correctly registers BenchmarksPanel and ResultsPanel in compose()
-[✓] F3 keybinding maps to action_show_benchmarks() → action_nav("benchmarks")
-[✓] F4 keybinding maps to action_show_results() → action_nav("results")
-[✓] BenchmarksPanel uses TabbedContent with correct tab IDs (tab-vdb, tab-rag, tab-emb, tab-llm)
-[✓] ResultsPanel uses TabbedContent with correct tab IDs (rtab-vdb, rtab-rag, rtab-emb, rtab-llm)
-[✓] BenchmarkProgress @work(thread=True) pattern documented
-[✓] ResultTable data loading pattern matches actual implementation
-[✓] JSON parsing helpers (_latest_json, _fmt) match source code
-[✓] API key status display in _LLMProviderTab matches env checks
-[✓] Subprocess process group handling (start_new_session, killpg) documented
-
-================================================================================
-TOKEN ANALYSIS (UPDATED)
-================================================================================
-
-Codemap              Original  Updated  Change   Focus
-─────────────────────────────────────────────────────────────────────────────
-tui.md               ~700      ~850     +150     Benchmarks/Results screens, widgets
-INDEX.md             ~300      ~350     +50      Updated references, notes
-─────────────────────────────────────────────────────────────────────────────
-Total (6 codemaps)   ~3,500    ~3,650   +150     Phase 6 Phase 2 complete
-
-Still token-efficient: each codemap under 1000 tokens (tui.md at ~850).
-
-================================================================================
-SCOPE & FUTURE WORK
-================================================================================
-
-Phase 6 Status:
-  ✓ Phase 1: Dashboard, Chat (2 screens)
-  ✓ Phase 2: Benchmarks, Results (2 screens, 4 widgets)
-  ⏳ Phase 3: Documents (1 screen, stub)
-  ⏳ Phase 4: Tests (1 screen, stub)
-  ⏳ Phase 5: Settings (1 screen, stub)
-
-Next Codemap Update Triggers:
-  • Implement Documents screen (search, upload, index UI)
-  • Implement Tests screen (test runner, result viewer)
-  • Implement Settings screen (API URL, auth, theme)
-  • Add new TUI widgets for configuration, live monitoring, etc.
-  • Major changes to Benchmarks/Results screens
-  • Dependency updates affecting TUI libraries
-
-================================================================================
-GENERATED BY: Claude Code (claude-haiku-4-5-20251001)
-CODEBASE: /Users/kimzey/Desktop/project/rag/spike-rak
-TASK: Update codemaps for TUI Phase 2 (Benchmarks & Results) implementation
-COMMIT PARENT: c66c93d (Add TUI Phase 1)
-================================================================================
+All changes reuse existing openai SDK + OpenRouter base URL pattern already used for LLMs.

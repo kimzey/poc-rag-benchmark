@@ -43,7 +43,10 @@ class BareMetalRAGPipeline(BaseRAGPipeline):
     def __init__(self) -> None:
         if _is_openai_model(config.EMBEDDING_MODEL):
             self._embedder = None
-            self._openai_embed = OpenAI(api_key=config.OPENAI_API_KEY)
+            self._openai_embed = OpenAI(
+                api_key=config.OPENROUTER_API_KEY,
+                base_url=config.OPENROUTER_BASE_URL,
+            )
         else:
             from sentence_transformers import SentenceTransformer
             self._embedder = SentenceTransformer(config.EMBEDDING_MODEL)

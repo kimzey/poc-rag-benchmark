@@ -213,8 +213,8 @@ class BaseEmbeddingModel(ABC):
 | **E5 Multilingual** | `multilingual_e5/model.py` | Open (HF) | 1024 | 512 | $0.00 |
 | **MxBai Embed** | `mxbai/model.py` | Open (HF) | 1024 | 512 | $0.00 |
 | **WangchanBERTa** | `wangchanberta/model.py` | Open (HF, Thai-optimized) | 768 | 512 | $0.00 |
-| **OpenAI 3-small** | `openai/model.py` | Commercial | 1536 | 8191 | $0.02/1M |
-| **OpenAI 3-large** | `openai/model.py` | Commercial | 3072 | 8191 | $0.13/1M |
+| **OpenAI 3-small** | `models/openai_small.py` | Commercial (via OpenRouter) | 1536 | 8191 | $0.02/1M |
+| **OpenAI 3-large** | `models/openai_large.py` | Commercial (via OpenRouter) | 3072 | 8191 | $0.13/1M |
 | **Cohere V3** | `cohere/model.py` | Commercial | 1024 | 512 | $0.10/1M |
 
 ### Evaluator (`evaluate.py`)

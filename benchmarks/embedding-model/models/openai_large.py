@@ -17,13 +17,15 @@ class OpenAILargeModel(BaseEmbeddingModel):
     """text-embedding-3-large — 3072 dims, best OpenAI quality. $0.13/1M tokens."""
 
     def __init__(self) -> None:
-        if not config.OPENAI_API_KEY:
+        if not config.OPENROUTER_API_KEY:
             raise EnvironmentError(
-                "OPENAI_API_KEY not set — skipping text-embedding-3-large. "
-                "Add it to .env to include this model."
+                "OPENROUTER_API_KEY not set — skipping text-embedding-3-large."
             )
         from openai import OpenAI
-        self._client = OpenAI(api_key=config.OPENAI_API_KEY)
+        self._client = OpenAI(
+            api_key=config.OPENROUTER_API_KEY,
+            base_url=config.OPENROUTER_BASE_URL,
+        )
 
     @property
     def meta(self) -> ModelMeta:
@@ -41,7 +43,7 @@ class OpenAILargeModel(BaseEmbeddingModel):
         for i in range(0, len(texts), _BATCH):
             batch = texts[i : i + _BATCH]
             resp = self._client.embeddings.create(
-                model="text-embedding-3-large",
+                model="openai/text-embedding-3-large",
                 input=batch,
             )
             all_embeddings.extend([d.embedding for d in resp.data])

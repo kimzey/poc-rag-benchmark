@@ -44,7 +44,9 @@ class LangChainRAGPipeline(BaseRAGPipeline):
         if config.EMBEDDING_MODEL.startswith("text-embedding"):
             from langchain_openai import OpenAIEmbeddings
             self._embeddings = OpenAIEmbeddings(
-                model=config.EMBEDDING_MODEL, openai_api_key=config.OPENAI_API_KEY
+                model=config.EMBEDDING_MODEL,
+                openai_api_key=config.OPENROUTER_API_KEY,
+                openai_api_base=config.OPENROUTER_BASE_URL,
             )
         else:
             from langchain_huggingface import HuggingFaceEmbeddings
