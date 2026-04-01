@@ -1,11 +1,12 @@
 .PHONY: help setup up-db down-db \
-        install install-rag install-embed install-llm install-api install-test \
+        install install-rag install-embed install-llm install-api install-test install-tui \
         benchmark-quick benchmark-medium benchmark-all benchmark-db \
         rag-eval rag-eval-framework rag-eval-no-llm \
         embed-eval embed-eval-all embed-eval-model embed-eval-topk \
         llm-eval llm-eval-all llm-eval-provider llm-eval-topk \
         api-run api-demo \
         test-integration test-integration-verbose load-test \
+        tui tui-embedded \
         logs-db ps-db
 
 API_DIR         = api
@@ -71,6 +72,12 @@ help:
 	@echo "  make load-test                   Locust load test (requires: make api-run)"
 	@echo ""
 	@echo "  Load test options: make load-test U=100 R=10 T=60s"
+	@echo ""
+	@echo "  Phase 6 — TUI (Terminal User Interface)"
+	@echo "  ────────────────────────────────────────"
+	@echo "  make install-tui            Install TUI deps (textual + api group)"
+	@echo "  make tui                    Launch TUI (requires: make api-run)"
+	@echo "  make tui-embedded           Launch TUI in embedded mode (no server needed)"
 	@echo ""
 
 # ── Setup ─────────────────────────────────────────────────────────────────────
@@ -214,3 +221,16 @@ load-test:
 		--spawn-rate $(or $(R),5) \
 		--run-time $(or $(T),30s) \
 		--only-summary
+
+# ── Phase 6: TUI (Terminal User Interface) ────────────────────────────────────
+
+TUI_DIR = tui
+
+install-tui:
+	$(UV) sync --group tui
+
+tui:
+	$(UV) run python -m tui
+
+tui-embedded:
+	TUI_EMBEDDED_MODE=true $(UV) run python -m tui

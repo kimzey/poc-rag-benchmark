@@ -93,3 +93,9 @@ test = [
     "pytest-asyncio==0.25.3",
     "locust==2.32.4",
 ]
+
+# ── Phase 6: TUI — Terminal User Interface ─────────────────────────────────────
+tui = [
+    { include-group = "api" },
+    "textual>=0.80.0",
+]
