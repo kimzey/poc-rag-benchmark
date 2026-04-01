@@ -1,8 +1,8 @@
-<!-- Generated: 2026-04-01 | Files scanned: 17 | Token estimate: ~850 -->
+<!-- Generated: 2026-04-01 | Files scanned: 17 | Token estimate: ~900 -->
 
 # TUI (Terminal User Interface) Codemap
 
-**Last Updated:** 2026-04-01 (Updated for Phase 2: Benchmarks & Results)  
+**Last Updated:** 2026-04-01 (Updated for Phase 3: Embedding Model Scorecard)  
 **Phase:** 6 (Textual TUI application)  
 **Entry Points:** `tui/app.py` (RAGTuiApp), `python -m tui` or `make tui`
 
@@ -87,9 +87,9 @@ BenchmarksPanel
 │  │  └─ BenchmarkProgress widget
 │  │
 │  ├─ _EmbeddingModelTab
-│  │  ├─ Checkboxes: multilingual_e5, bge_m3, mxbai, openai_large, openai_small
+│  │  ├─ Checkboxes: multilingual_e5, bge_m3, mxbai, wangchanberta, openai_large, openai_small, cohere_v3
 │  │  ├─ Input: top_k (default 3)
-│  │  ├─ Note: "OPENAI_API_KEY required for openai_* models"
+│  │  ├─ Note: "OPENAI_API_KEY / COHERE_API_KEY required for api models"
 │  │  ├─ Button: "Run Embedding Benchmark"
 │  │  └─ BenchmarkProgress widget
 │  │
@@ -113,7 +113,8 @@ ResultsPanel
 │  │
 │  ├─ _EmbeddingModelResult (reads from benchmarks/embedding-model/results/)
 │  │  ├─ ResultTable: Quality [Model, Thai Recall, Eng Recall, Overall, MRR]
-│  │  └─ ResultTable: Latency & Cost [Model, Idx(ms), Avg Query(ms), Cost/1M, Self-host]
+│  │  ├─ ResultTable: Latency & Cost [Model, Idx(ms), Avg Query(ms), Cost/1M, Self-host]
+│  │  └─ ResultTable: Weighted Scorecard [Rank, Model, Weighted Score, Dims, Max Tokens, Lock-in]
 │  │
 │  └─ _LLMProviderResult (reads from benchmarks/llm-provider/results/)
 │     ├─ ResultTable: Quality [Provider, Overall F1, Thai F1, Questions]

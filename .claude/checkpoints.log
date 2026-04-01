@@ -13,3 +13,4 @@
 2026-04-01-11:06 | phase2-rag-fixes-done | de47874 | 29 tests pass
 2026-04-01-16:44 | tui-phase1-complete | c66c93d | TUI Phase 1 + codemaps
 2026-04-01-17:08 | tui-phase2-complete | 335ed8d | TUI Phase 2 (Benchmarks+Results screens) + ANSI fix + install-all
+2026-04-01-17:13 | tui-phase3-complete | ee2e94f

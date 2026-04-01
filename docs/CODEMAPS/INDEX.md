@@ -2,9 +2,9 @@
 
 # RAG Spike Codemaps — Index
 
-**Last Updated:** 2026-04-01 (Updated: Phase 6 Phase 2 - Benchmarks & Results screens)  
+**Last Updated:** 2026-04-01 (Updated: Phase 6 Phase 3 - Embedding Model Scorecard)  
 **Total Modules:** 54 files scanned  
-**Phases:** 1-6 (complete stack: benchmarks → API → TUI, Phase 6 Phase 2 complete)
+**Phases:** 1-6 (complete stack: benchmarks → API → TUI, Phase 6 Phase 3 complete)
 
 ## Quick Navigation
 
@@ -12,7 +12,7 @@
 |---------|----------|-------|------|
 | **[architecture.md](architecture.md)** | All (1-6) | Overall 6-phase structure, data flow, design patterns | ~800 tokens |
 | **[backend.md](backend.md)** | 4 | FastAPI routes, auth middleware, RBAC, RAG pipeline | ~650 tokens |
-| **[tui.md](tui.md)** | 6 | Textual TUI app, screens (Phase 1-2 complete), widgets, navigation | ~850 tokens |
+| **[tui.md](tui.md)** | 6 | Textual TUI app, screens (Phase 1-3 complete), widgets, navigation | ~900 tokens |
 | **[benchmarks.md](benchmarks.md)** | 1-3.5 | ABC base classes, 4 vector DBs, 4 RAG frameworks, 6 embedding models, 4 LLM providers | ~750 tokens |
 | **[dependencies.md](dependencies.md)** | All | uv dependency groups, Docker services, API keys, configuration | ~600 tokens |
 
@@ -83,9 +83,10 @@ Comprehensive end-to-end testing:
 
 ### Phase 6: Textual TUI (`tui/`)
 
-Terminal user interface for interactive exploration — Phase 2 complete:
+Terminal user interface for interactive exploration — Phase 3 complete:
 - **Phase 1 (Complete):** Dashboard — System status, Chat — Message history + retrieval
 - **Phase 2 (Complete):** Benchmarks — Run 4 benchmark types, Results — View benchmark metrics
+- **Phase 3 (Complete):** Embedding Model — Weighted scorecard ranking, 7 models (incl. wangchanberta, cohere_v3)
 - **Navigation** — F1-F7 keybindings, Login dialog, async subprocess streaming
 - **Widgets:** BenchmarkProgress (real-time output), ResultTable (DataTable wrapper)
 
@@ -173,9 +174,9 @@ See **[dependencies.md](dependencies.md#configuration-files)** for:
 ## Document Maintenance
 
 These codemaps are **generated from the codebase** and updated regularly:
-- Last scanned: 2026-04-01 (Updated for TUI Phase 2: Benchmarks & Results)
-- Files scanned: 50+ (added: tui/screens/benchmarks.py, tui/screens/results.py, tui/widgets/benchmark_progress.py, tui/widgets/result_table.py)
-- Coverage: All 6 phases (100%) — Phase 6 Phase 2 now complete
-- Token total: ~3,650 tokens (6 codemaps, tui.md expanded to ~850 tokens)
+- Last scanned: 2026-04-01 (Updated for TUI Phase 3: Embedding Model Weighted Scorecard)
+- Files scanned: 54 (updated: tui/screens/benchmarks.py added wangchanberta/cohere_v3 checkboxes, tui/screens/results.py added Weighted Scorecard table)
+- Coverage: All 6 phases (100%) — Phase 6 Phase 3 now complete
+- Token total: ~3,750 tokens (6 codemaps, tui.md expanded to ~900 tokens)
 
 **To regenerate:** See instructions in CONTRIBUTING.md (section "Generate Codemaps")
