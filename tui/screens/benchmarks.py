@@ -95,15 +95,17 @@ class _EmbeddingModelTab(Vertical):
         yield Label("Embedding Model Benchmark", classes="section-header")
         yield Label("Select models:", classes="dim-label")
         with Horizontal(id="emb-checks"):
-            yield Checkbox("multilingual_e5", id="emb-e5",      value=True)
-            yield Checkbox("bge_m3",          id="emb-bge",     value=True)
-            yield Checkbox("mxbai",           id="emb-mxbai",   value=True)
-            yield Checkbox("openai_large",    id="emb-oai-lg",  value=False)
-            yield Checkbox("openai_small",    id="emb-oai-sm",  value=False)
+            yield Checkbox("multilingual_e5",  id="emb-e5",      value=True)
+            yield Checkbox("bge_m3",           id="emb-bge",     value=True)
+            yield Checkbox("mxbai",            id="emb-mxbai",   value=True)
+            yield Checkbox("wangchanberta",    id="emb-wang",    value=True)
+            yield Checkbox("openai_large",     id="emb-oai-lg",  value=False)
+            yield Checkbox("openai_small",     id="emb-oai-sm",  value=False)
+            yield Checkbox("cohere_v3",        id="emb-cohere",  value=False)
         with Horizontal(id="emb-options"):
             yield Label("top_k:")
             yield Input("3", id="emb-topk", restrict="0-9", max_length=2, classes="short-input")
-        yield Label("[dim]OPENAI_API_KEY required for openai_* models[/dim]", id="emb-key-hint")
+        yield Label("[dim]OPENAI_API_KEY / COHERE_API_KEY required for api models[/dim]", id="emb-key-hint")
         yield Rule()
         yield Button("Run Embedding Benchmark", id="btn-run-emb", variant="primary")
         yield BenchmarkProgress(id="emb-progress")
@@ -115,8 +117,10 @@ class _EmbeddingModelTab(Vertical):
             "emb-e5":     "multilingual_e5",
             "emb-bge":    "bge_m3",
             "emb-mxbai":  "mxbai",
+            "emb-wang":   "wangchanberta",
             "emb-oai-lg": "openai_large",
             "emb-oai-sm": "openai_small",
+            "emb-cohere": "cohere_v3",
         }
         selected = [
             model_map[cb.id]

@@ -149,8 +149,10 @@ class _EmbeddingModelResult(ScrollableContainer):
         quality_rows = []
         latency_cols = ["Model", "Idx(ms)", "Avg Query(ms)", "Cost/1M", "Self-host"]
         latency_rows = []
+        score_cols = ["Rank", "Model", "Weighted Score", "Dims", "Max Tokens", "Lock-in"]
+        score_rows = []
 
-        for r in results:
+        for rank, r in enumerate(results, start=1):
             model = r.get("model", "?")
             meta = r.get("meta", {})
             quality_rows.append([
@@ -167,16 +169,26 @@ class _EmbeddingModelResult(ScrollableContainer):
                 _fmt(meta.get("cost_per_1m_tokens"), 4),
                 "Yes" if meta.get("self_hostable") else "No",
             ])
+            score_rows.append([
+                str(rank),
+                meta.get("name", model),
+                _fmt(r.get("weighted_score"), 4),
+                str(meta.get("dimensions", "?")),
+                str(meta.get("max_tokens", "?")),
+                str(meta.get("vendor_lock_in", "?")),
+            ])
 
         self.query_one("#emb-msg", Static).update("")
         tables = self.query(ResultTable)
         tables[0].load(quality_cols, quality_rows)
         tables[1].load(latency_cols, latency_rows)
+        tables[2].load(score_cols, score_rows)
 
     def compose(self) -> ComposeResult:
         yield Static("", id="emb-msg")
         yield ResultTable(title="Retrieval Quality")
         yield ResultTable(title="Latency & Cost")
+        yield ResultTable(title="Weighted Scorecard (Thai 25%·Eng 15%·Latency 15%·Cost 15%·Self-host 10%·Dims 5%·MaxTok 5%·Lock-in 10%)")
 
 
 # ── LLM Provider tab ──────────────────────────────────────────────────────────
