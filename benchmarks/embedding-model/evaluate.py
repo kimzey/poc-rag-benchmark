@@ -156,112 +156,116 @@ def _evaluate_model(
     meta = model.meta
     console.print(f"  Model: {meta.name}  dims={meta.dimensions}  max_tokens={meta.max_tokens}")
 
-    # ── Index corpus ──────────────────────────────────────────────────────────
-    console.print(f"  [dim]Indexing {len(chunks)} chunks...[/dim]")
+    try:
+        # ── Index corpus ──────────────────────────────────────────────────────────
+        console.print(f"  [dim]Indexing {len(chunks)} chunks...[/dim]")
 
-    # E5 and Cohere use query/passage prefixes via special methods
-    is_e5 = hasattr(model, "encode_passages")
-    if is_e5:
-        idx_result = model.encode_passages(chunks)
-    else:
-        idx_result = model.encode(chunks)
-
-    corpus_embs = idx_result.embeddings
-    index_time_ms = idx_result.latency_ms
-    console.print(f"  ✓ Indexed in {index_time_ms:.0f} ms")
-
-    # ── Find ground truth chunks ──────────────────────────────────────────────
-    gt_indices = {
-        q["id"]: _find_ground_truth_chunk(q["expected_answer"], chunks)
-        for q in questions
-    }
-
-    # ── Query evaluation ──────────────────────────────────────────────────────
-    query_results: list[dict] = []
-    query_latencies: list[float] = []
-
-    for q in questions:
-        query_text = q["question"]
-
+        # E5 and Cohere use query/passage prefixes via special methods
+        is_e5 = hasattr(model, "encode_passages")
         if is_e5:
-            q_result = model.encode_queries([query_text])
+            idx_result = model.encode_passages(chunks)
         else:
-            q_result = model.encode([query_text])
+            idx_result = model.encode(chunks)
 
-        q_emb = q_result.embeddings[0]
-        query_latencies.append(q_result.latency_ms)
+        corpus_embs = idx_result.embeddings
+        index_time_ms = idx_result.latency_ms
+        console.print(f"  ✓ Indexed in {index_time_ms:.0f} ms")
 
-        retrieved_idx = _cosine_retrieve(q_emb, corpus_embs, top_k)
-        gt_idx = gt_indices[q["id"]]
-        hit = gt_idx in retrieved_idx
+        # ── Find ground truth chunks ──────────────────────────────────────────────
+        gt_indices = {
+            q["id"]: _find_ground_truth_chunk(q["expected_answer"], chunks)
+            for q in questions
+        }
 
-        # MRR: reciprocal rank of the ground truth chunk
-        rr = 0.0
-        if gt_idx in retrieved_idx:
-            rank = retrieved_idx.index(gt_idx) + 1  # 1-indexed
-            rr = 1.0 / rank
+        # ── Query evaluation ──────────────────────────────────────────────────────
+        query_results: list[dict] = []
+        query_latencies: list[float] = []
 
-        query_results.append(
-            {
-                "id": q["id"],
-                "question": q["question"],
-                "category": q.get("category", ""),
-                "gt_chunk_idx": gt_idx,
-                "hit_at_k": hit,
-                "reciprocal_rank": rr,
-                "retrieved_top1_chunk": chunks[retrieved_idx[0]][:120] if retrieved_idx else "",
-                "query_latency_ms": q_result.latency_ms,
-            }
+        for q in questions:
+            query_text = q["question"]
+
+            if is_e5:
+                q_result = model.encode_queries([query_text])
+            else:
+                q_result = model.encode([query_text])
+
+            q_emb = q_result.embeddings[0]
+            query_latencies.append(q_result.latency_ms)
+
+            retrieved_idx = _cosine_retrieve(q_emb, corpus_embs, top_k)
+            gt_idx = gt_indices[q["id"]]
+            hit = gt_idx in retrieved_idx
+
+            # MRR: reciprocal rank of the ground truth chunk
+            rr = 0.0
+            if gt_idx in retrieved_idx:
+                rank = retrieved_idx.index(gt_idx) + 1  # 1-indexed
+                rr = 1.0 / rank
+
+            query_results.append(
+                {
+                    "id": q["id"],
+                    "question": q["question"],
+                    "category": q.get("category", ""),
+                    "gt_chunk_idx": gt_idx,
+                    "hit_at_k": hit,
+                    "reciprocal_rank": rr,
+                    "retrieved_top1_chunk": chunks[retrieved_idx[0]][:120] if retrieved_idx else "",
+                    "query_latency_ms": q_result.latency_ms,
+                }
+            )
+
+        # ── Aggregate metrics ─────────────────────────────────────────────────────
+        thai_qs = [r for r in query_results if "thai" in r["category"]]
+        eng_qs  = [r for r in query_results if "english" in r["category"] or "eng" in r["category"]]
+
+        def _recall(qs: list[dict]) -> float:
+            if not qs:
+                return 0.0
+            return sum(r["hit_at_k"] for r in qs) / len(qs)
+
+        def _mrr(qs: list[dict]) -> float:
+            if not qs:
+                return 0.0
+            return sum(r["reciprocal_rank"] for r in qs) / len(qs)
+
+        thai_recall = _recall(thai_qs)
+        eng_recall  = _recall(eng_qs)
+        overall_recall = _recall(query_results)
+        mrr = _mrr(query_results)
+        avg_query_latency_ms = sum(query_latencies) / len(query_latencies) if query_latencies else 0.0
+
+        console.print(
+            f"  Thai Recall@{top_k}: {thai_recall:.0%}  "
+            f"Eng Recall@{top_k}: {eng_recall:.0%}  "
+            f"Overall Recall@{top_k}: {overall_recall:.0%}  "
+            f"MRR: {mrr:.3f}"
+        )
+        console.print(
+            f"  Index: {index_time_ms:.0f} ms  Avg Query: {avg_query_latency_ms:.0f} ms"
         )
 
-    # ── Aggregate metrics ─────────────────────────────────────────────────────
-    thai_qs = [r for r in query_results if "thai" in r["category"]]
-    eng_qs  = [r for r in query_results if "english" in r["category"] or "eng" in r["category"]]
-
-    def _recall(qs: list[dict]) -> float:
-        if not qs:
-            return 0.0
-        return sum(r["hit_at_k"] for r in qs) / len(qs)
-
-    def _mrr(qs: list[dict]) -> float:
-        if not qs:
-            return 0.0
-        return sum(r["reciprocal_rank"] for r in qs) / len(qs)
-
-    thai_recall = _recall(thai_qs)
-    eng_recall  = _recall(eng_qs)
-    overall_recall = _recall(query_results)
-    mrr = _mrr(query_results)
-    avg_query_latency_ms = sum(query_latencies) / len(query_latencies) if query_latencies else 0.0
-
-    console.print(
-        f"  Thai Recall@{top_k}: {thai_recall:.0%}  "
-        f"Eng Recall@{top_k}: {eng_recall:.0%}  "
-        f"Overall Recall@{top_k}: {overall_recall:.0%}  "
-        f"MRR: {mrr:.3f}"
-    )
-    console.print(
-        f"  Index: {index_time_ms:.0f} ms  Avg Query: {avg_query_latency_ms:.0f} ms"
-    )
-
-    return {
-        "model": name,
-        "meta": {
-            "name": meta.name,
-            "dimensions": meta.dimensions,
-            "max_tokens": meta.max_tokens,
-            "cost_per_1m_tokens": meta.cost_per_1m_tokens,
-            "vendor_lock_in": meta.vendor_lock_in,
-            "self_hostable": meta.self_hostable,
-        },
-        "index_time_ms": index_time_ms,
-        "avg_query_latency_ms": avg_query_latency_ms,
-        "thai_recall": thai_recall,
-        "eng_recall": eng_recall,
-        "overall_recall": overall_recall,
-        "mrr": mrr,
-        "queries": query_results,
-    }
+        return {
+            "model": name,
+            "meta": {
+                "name": meta.name,
+                "dimensions": meta.dimensions,
+                "max_tokens": meta.max_tokens,
+                "cost_per_1m_tokens": meta.cost_per_1m_tokens,
+                "vendor_lock_in": meta.vendor_lock_in,
+                "self_hostable": meta.self_hostable,
+            },
+            "index_time_ms": index_time_ms,
+            "avg_query_latency_ms": avg_query_latency_ms,
+            "thai_recall": thai_recall,
+            "eng_recall": eng_recall,
+            "overall_recall": overall_recall,
+            "mrr": mrr,
+            "queries": query_results,
+        }
+    except Exception as e:
+        console.print(f"  [red]EVAL ERROR: {e}[/red]")
+        return None
 
 
 # ── Weighted scorecard ────────────────────────────────────────────────────────
