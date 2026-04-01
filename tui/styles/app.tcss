@@ -397,6 +397,24 @@ _VectorDBResult, _RAGFrameworkResult, _EmbeddingModelResult, _LLMProviderResult 
     height: 1fr;
 }
 
+.file-sel-row {
+    height: 3;
+    margin-bottom: 1;
+    layout: horizontal;
+}
+
+.file-sel-label {
+    width: auto;
+    content-align: left middle;
+    height: 3;
+    margin-right: 1;
+}
+
+.file-sel-row Select {
+    width: 1fr;
+    height: 3;
+}
+
 ResultTable {
     margin-bottom: 2;
     height: auto;
@@ -405,4 +423,144 @@ ResultTable {
 ResultTable DataTable {
     height: auto;
     max-height: 20;
+}
+
+/* ── Documents ───────────────────────────────────────────────────────────── */
+
+#docs-title, #tests-title, #settings-title {
+    padding: 1 2;
+    text-style: bold;
+    background: $primary-darken-2;
+    width: 100%;
+    height: 3;
+    text-align: center;
+    content-align: center middle;
+}
+
+#docs-body, #tests-body, #settings-body {
+    height: 1fr;
+    padding: 1 2;
+    layout: vertical;
+}
+
+#docs-search-row {
+    height: 3;
+    margin-bottom: 1;
+    layout: horizontal;
+}
+
+#docs-search-row Input {
+    width: 1fr;
+}
+
+#docs-search-row Button {
+    width: 12;
+    margin-left: 1;
+}
+
+#docs-table {
+    height: 12;
+    margin-bottom: 1;
+}
+
+#docs-upload-row {
+    height: 3;
+    margin-bottom: 1;
+    layout: horizontal;
+}
+
+#docs-upload-row Input {
+    width: 1fr;
+}
+
+#docs-access-level {
+    width: 32;
+    margin: 0 1;
+}
+
+#docs-upload-row Button {
+    width: 12;
+}
+
+#docs-status {
+    height: 1;
+    margin-bottom: 1;
+}
+
+#docs-collections-info {
+    height: 1;
+    color: $text-muted;
+}
+
+/* ── Tests ───────────────────────────────────────────────────────────────── */
+
+#tests-controls {
+    height: 3;
+    margin-bottom: 1;
+    layout: horizontal;
+}
+
+#tests-controls Button {
+    margin-right: 1;
+}
+
+#tests-controls #tests-status {
+    width: 1fr;
+    content-align: left middle;
+    height: 3;
+    padding: 0 1;
+}
+
+#tests-hint {
+    height: 1;
+    margin-bottom: 1;
+}
+
+#tests-log {
+    height: 1fr;
+    border: tall $panel-darken-2;
+    background: $surface-darken-1;
+}
+
+#tests-summary {
+    height: 1;
+    margin-top: 1;
+    text-style: bold;
+}
+
+/* ── Settings ────────────────────────────────────────────────────────────── */
+
+#settings-current-url {
+    height: 1;
+    margin-bottom: 1;
+}
+
+#settings-url-row {
+    height: 3;
+    margin-bottom: 1;
+    layout: horizontal;
+}
+
+#settings-url-row Input {
+    width: 1fr;
+}
+
+#settings-url-row Button {
+    width: 20;
+    margin-left: 1;
+}
+
+#settings-conn-status {
+    height: 1;
+    margin-bottom: 1;
+}
+
+#settings-env-vars {
+    height: auto;
+    margin-bottom: 1;
+}
+
+#settings-info {
+    height: auto;
+    color: $text-muted;
 }

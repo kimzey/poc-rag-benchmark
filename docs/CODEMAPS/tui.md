@@ -1,8 +1,8 @@
-<!-- Generated: 2026-04-01 | Files scanned: 17 | Token estimate: ~900 -->
+<!-- Generated: 2026-04-01 | Files scanned: 22 | Token estimate: ~950 -->
 
 # TUI (Terminal User Interface) Codemap
 
-**Last Updated:** 2026-04-01 (Updated for Phase 3: Embedding Model Scorecard)  
+**Last Updated:** 2026-04-01 (Updated: File selector in Results tabs, Documents/Tests/Settings screens)  
 **Phase:** 6 (Textual TUI application)  
 **Entry Points:** `tui/app.py` (RAGTuiApp), `python -m tui` or `make tui`
 
@@ -44,9 +44,9 @@ tui/app.py (RAGTuiApp — Textual App)
    └─ ... (one per binding)
 ```
 
-## Screens (Implemented & Phase 2 Complete)
+## Screens (Phases 1-3 Complete)
 
-### Phase 1: Dashboard & Chat (Implemented)
+### Phase 1: Dashboard & Chat (Implemented ✓)
 
 **DashboardPanel** (`tui/screens/dashboard.py`)
 ```
@@ -100,26 +100,44 @@ BenchmarksPanel
 │     └─ BenchmarkProgress widget
 ```
 
-**ResultsPanel** (`tui/screens/results.py`)
+**ResultsPanel** (`tui/screens/results.py`) — File Selector Pattern (NEW)
 ```
 ResultsPanel
 ├─ TabbedContent(id="results-tabs")
-│  ├─ _VectorDBResult (reads latest JSON from benchmarks/vector-db/results/)
+│  ├─ _VectorDBResult (reads from benchmarks/vector-db/results/)
+│  │  ├─ Horizontal(classes="file-sel-row")
+│  │  │  ├─ Label("File: ")
+│  │  │  └─ Select(id="vdb-file-sel") ← Lists JSON files sorted by mtime (newest first)
+│  │  │     └─ Format: "filename.json  [mm-dd HH:MM]"
+│  │  ├─ Static(id="vdb-msg") ← Empty-state or record count ("5 records")
 │  │  └─ ResultTable: Cols=[DB, Vectors, Idx(s), Throughput, p50(ms), p95(ms), p99(ms), QPS, Filter p95, Recall@10]
 │  │
 │  ├─ _RAGFrameworkResult (reads from benchmarks/rag-framework/results/)
-│  │  ├─ ResultTable: Indexing metrics [Framework, Chunks, Idx(ms), LOC]
-│  │  └─ ResultTable: Query latency [Framework, Min(ms), Avg(ms), Max(ms), p95(ms)]
+│  │  ├─ Select widget (file picker)
+│  │  ├─ Status message
+│  │  ├─ ResultTable: Indexing [Framework, Chunks, Idx(ms), LOC]
+│  │  └─ ResultTable: Query Latency [Framework, Min(ms), Avg(ms), Max(ms), p95(ms)]
 │  │
 │  ├─ _EmbeddingModelResult (reads from benchmarks/embedding-model/results/)
+│  │  ├─ Select widget (file picker)
+│  │  ├─ Status message
 │  │  ├─ ResultTable: Quality [Model, Thai Recall, Eng Recall, Overall, MRR]
 │  │  ├─ ResultTable: Latency & Cost [Model, Idx(ms), Avg Query(ms), Cost/1M, Self-host]
 │  │  └─ ResultTable: Weighted Scorecard [Rank, Model, Weighted Score, Dims, Max Tokens, Lock-in]
 │  │
 │  └─ _LLMProviderResult (reads from benchmarks/llm-provider/results/)
+│     ├─ Select widget (file picker)
+│     ├─ Status message
 │     ├─ ResultTable: Quality [Provider, Overall F1, Thai F1, Questions]
 │     └─ ResultTable: Cost [Provider, Avg Lat(ms), Total Cost($), $/1M in, $/1M out]
 ```
+
+**File Selector Implementation Details:**
+- `on_show()` → calls `_refresh_selector()` to populate Select options
+- `_list_jsons(directory)` → returns list of (label, Path) tuples sorted by mtime descending
+- `Select.Changed` event → triggers `_load(event.value)` to render tables
+- Empty-state: If no JSON files found, hides file-sel-row and shows red message "No result files found"
+- Guidance: Message hints users to run respective benchmark (e.g., "run: make embed-eval")
 
 ## Widgets
 
@@ -188,6 +206,57 @@ class ResultTable(Widget):
         
     Usage: Each ResultsPanel tab uses 1-2 ResultTable widgets
     Data source: Latest JSON in benchmarks/*/results/ directory
+```
+
+## Phase 3 Screens (Stubs — Ready for Implementation)
+
+**DocumentsPanel** (`tui/screens/documents.py`)
+```
+├─ Title: "Documents"
+├─ Search Documents
+│  ├─ Input: Search query text field
+│  ├─ Button: "Search"
+│  └─ DataTable: [Doc ID, Title, Score, Access Level, Snippet]
+│
+├─ Upload Document (employee+ only)
+│  ├─ Input: File path (e.g., "datasets/hr_policy_th.md")
+│  ├─ Select: Access Level dropdown
+│  │  ├─ "Internal KB (employee+)" → internal_kb
+│  │  ├─ "Customer KB (public)" → customer_kb
+│  │  └─ "Confidential (admin only)" → confidential_kb
+│  ├─ Button: "Upload"
+│  ├─ Static(id="docs-status"): Async upload feedback
+│  └─ Static(id="docs-collections-info"): List of current collections
+```
+
+**TestsPanel** (`tui/screens/tests.py`)
+```
+├─ Title: "Tests"
+├─ Integration Test Runner (stub — ready for implementation)
+│  ├─ Checkbox list: Select test scenarios
+│  ├─ Button: "Run Tests"
+│  └─ Output widget: Real-time pytest output
+│
+└─ Load Test Runner (stub)
+   ├─ Input: Target RPS (requests per second)
+   ├─ Button: "Start Load Test"
+   └─ Charts: p50/p95 latency, throughput, errors
+```
+
+**SettingsPanel** (`tui/screens/settings.py`)
+```
+├─ Title: "Settings"
+├─ API Configuration (stub — ready for implementation)
+│  ├─ Input: API Base URL
+│  ├─ Select: LLM Provider (OpenRouter, OpenAI, Anthropic, Ollama)
+│  ├─ Input: API Key (masked)
+│  └─ Button: "Test Connection"
+│
+├─ Embedding Model Configuration
+│  └─ Select: Choose embedding model (BGE-M3, E5, MxBai, WangchanBERTa, etc.)
+│
+└─ Vector DB Configuration
+   └─ Select: Choose vector DB (Qdrant, pgvector, Milvus, OpenSearch)
 ```
 
 ## HTTP Client (`tui/client.py`)
@@ -268,15 +337,24 @@ Start
   │     └─ BenchmarkProgress widget streams live output
   │        └─ Live result JSON written to benchmarks/*/results/
   ↓
-[Results] (F4) ← Phase 2: View latest benchmark JSON results (4 tabs)
-  │  └─ Auto-loads latest JSON from benchmarks/*/results/ directories
-  │     └─ ResultTable widgets display metrics tables
+[Results] (F4) ← Phase 2: View latest benchmark JSON results (4 tabs, file selector UX)
+  │  ├─ File selector on each tab (Select widget with timestamps)
+  │  ├─ Empty-state guidance (hints to run benchmarks)
+  │  └─ ResultTable widgets display metrics tables
   ↓
-[Documents] (F5) ← Phase 3, stub
+[Documents] (F5) ← Phase 3: Document search & upload
+  │  ├─ Search via API: query → POST /api/v1/documents/search
+  │  └─ Upload: file path + access_level → POST /api/v1/documents/upload
   ↓
-[Tests] (F6) ← Phase 3, stub
+[Tests] (F6) ← Phase 3: Integration & load testing (stub)
+  │  ├─ Integration tests: pytest runner (real-time output)
+  │  └─ Load tests: Locust runner with latency charts
   ↓
-[Settings] (F7) ← Phase 4, stub
+[Settings] (F7) ← Phase 3: Configuration (stub)
+  │  ├─ API endpoint URL
+  │  ├─ LLM provider selection
+  │  ├─ Embedding model selection
+  │  └─ Vector DB selection
   ↓ Q
 [Quit]
 ```

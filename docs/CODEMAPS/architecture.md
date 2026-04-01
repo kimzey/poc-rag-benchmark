@@ -1,8 +1,8 @@
-<!-- Generated: 2026-04-01 | Files scanned: 50 | Token estimate: ~800 -->
+<!-- Generated: 2026-04-01 | Files scanned: 57 | Token estimate: ~800 -->
 
 # Architecture Codemap
 
-**Last Updated:** 2026-04-01 | **Phase:** 1 ✅ + 2 ✅ + 3 ✅ + 3.5 ✅ + 4 ✅ (API Layer) + 5 ✅ (Integration Tests) + 6 ✅ (TUI)
+**Last Updated:** 2026-04-01 (Updated: Phase 6 Results file selector, Documents/Tests/Settings screens) | **Phase:** 1 ✅ + 2 ✅ + 3 ✅ + 3.5 ✅ + 4 ✅ (API Layer) + 5 ✅ (Integration Tests) + 6 ✅ (TUI Phase 3 complete)
 
 ## Overview
 
@@ -124,6 +124,33 @@ spike-rak/
       • p95 latency:       < 8s   (including LLM generation)
       • Retrieval p95:     < 200ms (vector search only)
       • Throughput:        > 50 req/sec
+
+└── [Phase 6 ✅] Terminal User Interface ────────────────────────────
+    tui/ (Textual TUI application)
+      Entry: python -m tui or make tui (requires API server on localhost:8000)
+      
+      Screens & Features:
+      • Phase 1: Dashboard (API status + model info) + Chat (RAG query + chunks)
+      • Phase 2: Benchmarks (run 4 benchmark types) + Results (view JSON results)
+      • Phase 3: 
+        - Results file selector: Select widget per tab (VDB/RAG/Embed/LLM)
+          Sorted by file mtime descending, shows timestamp in label
+          Empty-state guidance directs users to run benchmarks
+        - DocumentsPanel: Search API + upload with access level selection
+        - TestsPanel (stub): Integration + load test runners
+        - SettingsPanel (stub): API URL, LLM/embedding/vector DB configuration
+      
+      Navigation: F1-F7 keybindings, L for login, Ctrl+L to clear chat
+      Widgets:
+      • BenchmarkProgress: Real-time subprocess output for long-running benchmarks
+      • ResultTable: DataTable wrapper for displaying benchmark metrics
+      • LoginModal: JWT authentication dialog
+      • StatusBar: Connection + user status at bottom
+      
+      HTTP Client (tui/client.py):
+      • RAGClient: AsyncClient wrapper for API endpoints
+      • Supports auth (JWT), chat, search, feedback, health check
+      • Data models: RetrievedChunk, ChatResult, AuthError
 ```
 
 ## Phase 1 — VectorDBClient Interface
@@ -294,8 +321,9 @@ Both phases apply the same pattern:
 
 ## Related Files
 
-- `plan.md` — Full 6-phase spike plan (Phases 4–6 not yet started)
+- `plan.md` — Full 6-phase spike plan (all phases complete)
 - `datasets/` — Thai/English/Mixed test documents (reused Phases 2–3.5)
 - `.env.example` — Environment variables template
 - `benchmarks/embedding-model/results/` — Phase 3 JSON output with rankings
 - `benchmarks/llm-provider/results/` — Phase 3.5 JSON output with rankings
+- `tui/` — Phase 6 Textual TUI application (entry point: python -m tui)

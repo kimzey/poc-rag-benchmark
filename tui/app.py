@@ -14,7 +14,6 @@ from textual.widgets import (
     ContentSwitcher,
     Footer,
     Header,
-    Label,
     Rule,
     Static,
 )
@@ -24,29 +23,12 @@ from tui.config import settings
 from tui.screens.benchmarks import BenchmarksPanel
 from tui.screens.chat import ChatPanel
 from tui.screens.dashboard import DashboardPanel
+from tui.screens.documents import DocumentsPanel
 from tui.screens.results import ResultsPanel
+from tui.screens.settings import SettingsPanel
+from tui.screens.tests import TestsPanel
 from tui.widgets.login_dialog import LoginModal
 from tui.widgets.status_bar import StatusBar
-
-# Panels not yet implemented — show placeholder
-_PLACEHOLDER_PANELS = [
-    ("documents", "Documents", "Phase 3"),
-    ("tests", "Tests", "Phase 3"),
-    ("settings", "Settings", "Phase 4"),
-]
-
-
-class PlaceholderPanel(Static):
-    """Stub for panels coming in later phases."""
-
-    def __init__(self, title: str, phase: str, **kwargs) -> None:
-        super().__init__(
-            f"[bold]{title}[/bold]\n\n"
-            f"[dim]Coming in {phase}[/dim]\n\n"
-            "See [italic]plan.md[/italic] for implementation details.",
-            classes="placeholder-panel",
-            **kwargs,
-        )
 
 
 class NavigationSidebar(Vertical):
@@ -97,8 +79,9 @@ class RAGTuiApp(App):
                 yield ChatPanel(id="chat")
                 yield BenchmarksPanel(id="benchmarks")
                 yield ResultsPanel(id="results")
-                for panel_id, title, phase in _PLACEHOLDER_PANELS:
-                    yield PlaceholderPanel(title, phase, id=panel_id)
+                yield DocumentsPanel(id="documents")
+                yield TestsPanel(id="tests")
+                yield SettingsPanel(id="settings")
         yield StatusBar(id="status-bar")
         yield Footer()
 

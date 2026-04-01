@@ -1,8 +1,8 @@
-<!-- Generated: 2026-03-31 | Files scanned: 20 | Token estimate: ~950 -->
+<!-- Generated: 2026-04-01 | Files scanned: 20 | Token estimate: ~950 -->
 
 # Data Schema & Generation Codemap
 
-**Last Updated:** 2026-03-31 | **Phase:** 1 ✅ + 2 🔄 + 3 🔄 + 3.5 🆕 + 4 🆕 + 5 🆕
+**Last Updated:** 2026-04-01 (Stable; benchmark schemas unchanged) | **Phase:** 1 ✅ + 2 ✅ + 3 ✅ + 3.5 ✅ + 4 ✅ + 5 ✅
 
 ---
 

@@ -2,7 +2,7 @@
 
 # Dependencies & External Services Codemap
 
-**Last Updated:** 2026-04-01  
+**Last Updated:** 2026-04-01 (Stable since Phase 6 completed)  
 **Tool:** uv (Python 3.11+), Docker Compose, Makefile
 
 ## Dependency Groups (uv)

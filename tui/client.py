@@ -109,6 +109,30 @@ class RAGClient:
         r.raise_for_status()
         return r.json()
 
+    async def list_collections(self) -> dict:
+        r = await self._http.get("/api/v1/documents/collections", headers=self._headers())
+        r.raise_for_status()
+        return r.json()
+
+    async def upload_document(self, file_path: str, access_level: str = "internal_kb") -> dict:
+        import asyncio
+        import os
+
+        def _read() -> bytes:
+            with open(file_path, "rb") as f:
+                return f.read()
+
+        content = await asyncio.to_thread(_read)
+        filename = os.path.basename(file_path)
+        r = await self._http.post(
+            "/api/v1/documents/upload",
+            files={"file": (filename, content, "text/plain")},
+            params={"access_level": access_level},
+            headers=self._headers(),
+        )
+        r.raise_for_status()
+        return r.json()
+
     async def submit_feedback(
         self, query_id: str, rating: int, comment: str = ""
     ) -> dict:

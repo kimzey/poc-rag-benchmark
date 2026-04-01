@@ -2,29 +2,36 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from pathlib import Path
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import ScrollableContainer, Vertical
+from textual.containers import Horizontal, ScrollableContainer
 from textual.widget import Widget
-from textual.widgets import Label, Static, TabbedContent, TabPane
+from textual.widgets import Label, Select, Static, TabbedContent, TabPane
 
 from tui.widgets.result_table import ResultTable
 
 _ROOT = Path(__file__).parents[2]
-_VDB_RESULTS   = _ROOT / "benchmarks" / "vector-db"   / "results"
-_RAG_RESULTS   = _ROOT / "benchmarks" / "rag-framework"/ "results"
-_EMB_RESULTS   = _ROOT / "benchmarks" / "embedding-model" / "results"
-_LLM_RESULTS   = _ROOT / "benchmarks" / "llm-provider" / "results"
+_VDB_RESULTS = _ROOT / "benchmarks" / "vector-db" / "results"
+_RAG_RESULTS = _ROOT / "benchmarks" / "rag-framework" / "results"
+_EMB_RESULTS = _ROOT / "benchmarks" / "embedding-model" / "results"
+_LLM_RESULTS = _ROOT / "benchmarks" / "llm-provider" / "results"
 
 
-def _latest_json(directory: Path) -> dict | list | None:
+def _list_jsons(directory: Path) -> list[tuple[str, Path]]:
+    """Return (label, path) list sorted newest first."""
     files = sorted(directory.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
-    if not files:
-        return None
+    return [
+        (f"{f.name}  [{datetime.fromtimestamp(f.stat().st_mtime).strftime('%m-%d %H:%M')}]", f)
+        for f in files
+    ]
+
+
+def _load_json(path: Path) -> dict | list | None:
     try:
-        return json.loads(files[0].read_text())
+        return json.loads(path.read_text())
     except Exception:
         return None
 
@@ -41,12 +48,26 @@ def _fmt(val: object, decimals: int = 1) -> str:
 
 class _VectorDBResult(ScrollableContainer):
     def on_show(self) -> None:
-        self._load()
+        self._refresh_selector()
 
-    def _load(self) -> None:
-        data = _latest_json(_VDB_RESULTS)
+    def _refresh_selector(self) -> None:
+        options = _list_jsons(_VDB_RESULTS)
+        row = self.query_one("#vdb-sel-row")
+        msg = self.query_one("#vdb-msg", Static)
+        if not options:
+            row.display = False
+            msg.update("[red]No result files found in benchmarks/vector-db/results/[/red]")
+            return
+        row.display = True
+        sel = self.query_one("#vdb-file-sel", Select)
+        sel.set_options(options)
+        sel.value = options[0][1]
+
+    def _load(self, path: Path) -> None:
+        data = _load_json(path)
+        msg = self.query_one("#vdb-msg", Static)
         if not data:
-            self.query_one("#vdb-msg", Static).update("[red]No result files found in benchmarks/vector-db/results/[/red]")
+            msg.update(f"[red]Failed to load {path.name}[/red]")
             return
         if not isinstance(data, list):
             data = [data]
@@ -68,10 +89,21 @@ class _VectorDBResult(ScrollableContainer):
                 _fmt(fl.get("p95_ms"), 1),
                 _fmt(r.get("recall_at_10")),
             ])
-        self.query_one("#vdb-msg", Static).update("")
+        if not rows:
+            msg.update(f"[dim]{path.name}[/dim]  [yellow]No data rows in file[/yellow]")
+        else:
+            msg.update(f"[dim]{path.name}[/dim]  [green]{len(rows)} records[/green]")
         self.query_one(ResultTable).load(cols, rows)
 
+    @on(Select.Changed, "#vdb-file-sel")
+    def on_file_changed(self, event: Select.Changed) -> None:
+        if event.value is not Select.BLANK:
+            self._load(event.value)
+
     def compose(self) -> ComposeResult:
+        with Horizontal(id="vdb-sel-row", classes="file-sel-row"):
+            yield Label("File: ", classes="file-sel-label")
+            yield Select([], id="vdb-file-sel", prompt="Select result file...")
         yield Static("", id="vdb-msg")
         yield ResultTable(title="Vector DB Search Latency & Throughput")
 
@@ -80,21 +112,31 @@ class _VectorDBResult(ScrollableContainer):
 
 class _RAGFrameworkResult(ScrollableContainer):
     def on_show(self) -> None:
-        self._load()
+        self._refresh_selector()
 
-    def _load(self) -> None:
-        data = _latest_json(_RAG_RESULTS)
+    def _refresh_selector(self) -> None:
+        options = _list_jsons(_RAG_RESULTS)
+        row = self.query_one("#rag-sel-row")
+        msg = self.query_one("#rag-msg", Static)
+        if not options:
+            row.display = False
+            msg.update("[red]No result files found in benchmarks/rag-framework/results/[/red]")
+            return
+        row.display = True
+        sel = self.query_one("#rag-file-sel", Select)
+        sel.set_options(options)
+        sel.value = options[0][1]
+
+    def _load(self, path: Path) -> None:
+        data = _load_json(path)
+        msg = self.query_one("#rag-msg", Static)
         if not data:
-            self.query_one("#rag-msg", Static).update(
-                "[red]No result files found in benchmarks/rag-framework/results/[/red]"
-            )
+            msg.update(f"[red]Failed to load {path.name}[/red]")
             return
         results = data.get("results", []) if isinstance(data, dict) else data
 
-        # Indexing table
         idx_cols = ["Framework", "Chunks", "Idx(ms)", "LOC"]
         idx_rows = []
-        # Query latency table
         lat_cols = ["Framework", "Min(ms)", "Avg(ms)", "Max(ms)", "p95(ms)"]
         lat_rows = []
 
@@ -116,15 +158,26 @@ class _RAGFrameworkResult(ScrollableContainer):
                     _fmt(min(latencies), 1),
                     _fmt(sum(latencies) / len(latencies), 1),
                     _fmt(max(latencies), 1),
-                    _fmt(sorted_lat[min(p95_idx, len(sorted_lat)-1)], 1),
+                    _fmt(sorted_lat[min(p95_idx, len(sorted_lat) - 1)], 1),
                 ])
 
-        self.query_one("#rag-msg", Static).update("")
+        if not idx_rows:
+            msg.update(f"[dim]{path.name}[/dim]  [yellow]No data rows in file (run: make rag-eval)[/yellow]")
+        else:
+            msg.update(f"[dim]{path.name}[/dim]  [green]{len(idx_rows)} frameworks[/green]")
         tables = self.query(ResultTable)
         tables[0].load(idx_cols, idx_rows)
         tables[1].load(lat_cols, lat_rows)
 
+    @on(Select.Changed, "#rag-file-sel")
+    def on_file_changed(self, event: Select.Changed) -> None:
+        if event.value is not Select.BLANK:
+            self._load(event.value)
+
     def compose(self) -> ComposeResult:
+        with Horizontal(id="rag-sel-row", classes="file-sel-row"):
+            yield Label("File: ", classes="file-sel-label")
+            yield Select([], id="rag-file-sel", prompt="Select result file...")
         yield Static("", id="rag-msg")
         yield ResultTable(title="Indexing")
         yield ResultTable(title="Query Latency")
@@ -134,14 +187,26 @@ class _RAGFrameworkResult(ScrollableContainer):
 
 class _EmbeddingModelResult(ScrollableContainer):
     def on_show(self) -> None:
-        self._load()
+        self._refresh_selector()
 
-    def _load(self) -> None:
-        data = _latest_json(_EMB_RESULTS)
+    def _refresh_selector(self) -> None:
+        options = _list_jsons(_EMB_RESULTS)
+        row = self.query_one("#emb-sel-row")
+        msg = self.query_one("#emb-msg", Static)
+        if not options:
+            row.display = False
+            msg.update("[red]No result files found in benchmarks/embedding-model/results/[/red]")
+            return
+        row.display = True
+        sel = self.query_one("#emb-file-sel", Select)
+        sel.set_options(options)
+        sel.value = options[0][1]
+
+    def _load(self, path: Path) -> None:
+        data = _load_json(path)
+        msg = self.query_one("#emb-msg", Static)
         if not data:
-            self.query_one("#emb-msg", Static).update(
-                "[red]No result files found in benchmarks/embedding-model/results/[/red]"
-            )
+            msg.update(f"[red]Failed to load {path.name}[/red]")
             return
         results = data.get("results", []) if isinstance(data, dict) else data
 
@@ -178,13 +243,24 @@ class _EmbeddingModelResult(ScrollableContainer):
                 str(meta.get("vendor_lock_in", "?")),
             ])
 
-        self.query_one("#emb-msg", Static).update("")
+        if not quality_rows:
+            msg.update(f"[dim]{path.name}[/dim]  [yellow]No data rows in file (run: make embed-eval)[/yellow]")
+        else:
+            msg.update(f"[dim]{path.name}[/dim]  [green]{len(quality_rows)} models[/green]")
         tables = self.query(ResultTable)
         tables[0].load(quality_cols, quality_rows)
         tables[1].load(latency_cols, latency_rows)
         tables[2].load(score_cols, score_rows)
 
+    @on(Select.Changed, "#emb-file-sel")
+    def on_file_changed(self, event: Select.Changed) -> None:
+        if event.value is not Select.BLANK:
+            self._load(event.value)
+
     def compose(self) -> ComposeResult:
+        with Horizontal(id="emb-sel-row", classes="file-sel-row"):
+            yield Label("File: ", classes="file-sel-label")
+            yield Select([], id="emb-file-sel", prompt="Select result file...")
         yield Static("", id="emb-msg")
         yield ResultTable(title="Retrieval Quality")
         yield ResultTable(title="Latency & Cost")
@@ -195,14 +271,26 @@ class _EmbeddingModelResult(ScrollableContainer):
 
 class _LLMProviderResult(ScrollableContainer):
     def on_show(self) -> None:
-        self._load()
+        self._refresh_selector()
 
-    def _load(self) -> None:
-        data = _latest_json(_LLM_RESULTS)
+    def _refresh_selector(self) -> None:
+        options = _list_jsons(_LLM_RESULTS)
+        row = self.query_one("#llm-sel-row")
+        msg = self.query_one("#llm-msg", Static)
+        if not options:
+            row.display = False
+            msg.update("[red]No result files found in benchmarks/llm-provider/results/[/red]")
+            return
+        row.display = True
+        sel = self.query_one("#llm-file-sel", Select)
+        sel.set_options(options)
+        sel.value = options[0][1]
+
+    def _load(self, path: Path) -> None:
+        data = _load_json(path)
+        msg = self.query_one("#llm-msg", Static)
         if not data:
-            self.query_one("#llm-msg", Static).update(
-                "[red]No result files found in benchmarks/llm-provider/results/[/red]"
-            )
+            msg.update(f"[red]Failed to load {path.name}[/red]")
             return
         results = data.get("results", []) if isinstance(data, dict) else data
 
@@ -228,12 +316,23 @@ class _LLMProviderResult(ScrollableContainer):
                 _fmt(meta.get("cost_per_1m_output"), 3),
             ])
 
-        self.query_one("#llm-msg", Static).update("")
+        if not quality_rows:
+            msg.update(f"[dim]{path.name}[/dim]  [yellow]No data rows in file (run: make llm-eval)[/yellow]")
+        else:
+            msg.update(f"[dim]{path.name}[/dim]  [green]{len(quality_rows)} providers[/green]")
         tables = self.query(ResultTable)
         tables[0].load(quality_cols, quality_rows)
         tables[1].load(cost_cols, cost_rows)
 
+    @on(Select.Changed, "#llm-file-sel")
+    def on_file_changed(self, event: Select.Changed) -> None:
+        if event.value is not Select.BLANK:
+            self._load(event.value)
+
     def compose(self) -> ComposeResult:
+        with Horizontal(id="llm-sel-row", classes="file-sel-row"):
+            yield Label("File: ", classes="file-sel-label")
+            yield Select([], id="llm-file-sel", prompt="Select result file...")
         yield Static("", id="llm-msg")
         yield ResultTable(title="Answer Quality")
         yield ResultTable(title="Cost & Latency")

@@ -2,7 +2,7 @@
 
 # Backend & API Codemap
 
-**Last Updated:** 2026-04-01  
+**Last Updated:** 2026-04-01 (Stable since Phase 4 completion)  
 **Phase:** 4 (FastAPI + JWT + RBAC)  
 **Entry Points:** `api/main.py` (FastAPI app), `api/auth/dependencies.py` (auth middleware)
 

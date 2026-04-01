@@ -1,9 +1,9 @@
-<!-- Generated: 2026-04-01 | Files scanned: 54 | Token estimate: ~350 -->
+<!-- Generated: 2026-04-01 | Files scanned: 57 | Token estimate: ~350 -->
 
 # RAG Spike Codemaps — Index
 
-**Last Updated:** 2026-04-01 (Updated: Phase 6 Phase 3 - Embedding Model Scorecard)  
-**Total Modules:** 54 files scanned  
+**Last Updated:** 2026-04-01 (Updated: Phase 6 Phase 3 - Results file selector, Documents/Tests/Settings screens)  
+**Total Modules:** 57 files scanned  
 **Phases:** 1-6 (complete stack: benchmarks → API → TUI, Phase 6 Phase 3 complete)
 
 ## Quick Navigation
@@ -174,9 +174,15 @@ See **[dependencies.md](dependencies.md#configuration-files)** for:
 ## Document Maintenance
 
 These codemaps are **generated from the codebase** and updated regularly:
-- Last scanned: 2026-04-01 (Updated for TUI Phase 3: Embedding Model Weighted Scorecard)
-- Files scanned: 54 (updated: tui/screens/benchmarks.py added wangchanberta/cohere_v3 checkboxes, tui/screens/results.py added Weighted Scorecard table)
-- Coverage: All 6 phases (100%) — Phase 6 Phase 3 now complete
-- Token total: ~3,750 tokens (6 codemaps, tui.md expanded to ~900 tokens)
+- Last scanned: 2026-04-01 (Updated: Results file selector, Documents/Tests/Settings screens)
+- Files scanned: 57 (updated: tui/screens/results.py added Select widget for file selection, new screens created)
+- Coverage: All 6 phases (100%) — Phase 6 Phase 3 complete with enhanced results viewer
+- Token total: ~4,000 tokens (6 codemaps, tui.md updated with file selector UX)
+
+**Recent changes:**
+- Results tabs now include Select widget at top of each tab for choosing JSON result files
+- File selector shows filename + timestamp (sorted newest first)
+- Empty-state messages guide users to run benchmarks if no results found
+- New stub screens created: DocumentsPanel, TestsPanel, SettingsPanel
 
 **To regenerate:** See instructions in CONTRIBUTING.md (section "Generate Codemaps")
