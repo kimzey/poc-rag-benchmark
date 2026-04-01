@@ -63,9 +63,9 @@ WEIGHTS = {
 PROVIDER_REGISTRY: dict[str, tuple[str, str | None]] = {
     "openrouter_gpt4o_mini":   ("providers.openrouter.OpenRouterProvider",    "openai/gpt-4o-mini"),
     "openrouter_gpt4o":        ("providers.openrouter.OpenRouterProvider",    "openai/gpt-4o"),
-    "openrouter_claude_sonnet":("providers.openrouter.OpenRouterProvider",    "anthropic/claude-3.5-sonnet"),
+    "openrouter_claude_sonnet":("providers.openrouter.OpenRouterProvider",    "anthropic/claude-3.5-sonnet-20241022"),
     "openrouter_llama3":       ("providers.openrouter.OpenRouterProvider",    "meta-llama/llama-3.1-70b-instruct"),
-    "openrouter_gemini_flash": ("providers.openrouter.OpenRouterProvider",    "google/gemini-flash-1.5"),
+    "openrouter_gemini_flash": ("providers.openrouter.OpenRouterProvider",    "google/gemini-2.0-flash-001"),
     "openrouter_deepseek":     ("providers.openrouter.OpenRouterProvider",    "deepseek/deepseek-chat"),
     "openai_gpt4o_mini":       ("providers.openai_direct.OpenAIDirectProvider", "gpt-4o-mini"),
     "openai_gpt4o":            ("providers.openai_direct.OpenAIDirectProvider", "gpt-4o"),

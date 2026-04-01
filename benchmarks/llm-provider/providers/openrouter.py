@@ -18,7 +18,7 @@ from base import BaseLLMProvider, ProviderMeta
 # OpenRouter pricing (USD per 1M tokens, as of 2026-03)
 # Source: openrouter.ai/models
 _MODELS: dict[str, dict] = {
-    "anthropic/claude-3.5-sonnet": {
+    "anthropic/claude-3.5-sonnet-20241022": {
         "input": 3.00,
         "output": 15.00,
         "lock_in": 3,   # via OpenRouter — lower lock-in than direct
@@ -33,9 +33,9 @@ _MODELS: dict[str, dict] = {
         "output": 0.60,
         "lock_in": 3,
     },
-    "google/gemini-flash-1.5": {
-        "input": 0.075,
-        "output": 0.30,
+    "google/gemini-2.0-flash-001": {
+        "input": 0.10,
+        "output": 0.40,
         "lock_in": 2,
     },
     "meta-llama/llama-3.1-70b-instruct": {
