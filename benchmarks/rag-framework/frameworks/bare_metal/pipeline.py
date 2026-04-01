@@ -11,7 +11,6 @@ from pathlib import Path
 
 import numpy as np
 from openai import OpenAI
-from sentence_transformers import SentenceTransformer
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -31,11 +30,24 @@ Question: {question}
 Answer:"""
 
 
+def _is_openai_model(model: str) -> bool:
+    return model.startswith("text-embedding")
+
+
 class BareMetalRAGPipeline(BaseRAGPipeline):
-    """Direct implementation: sentence-transformers + numpy cosine sim + OpenRouter."""
+    """Direct implementation: numpy cosine sim + OpenRouter LLM.
+
+    Embedding: OpenAI API when RAG_EMBEDDING_MODEL=text-embedding-*, else sentence-transformers.
+    """
 
     def __init__(self) -> None:
-        self._embedder = SentenceTransformer(config.EMBEDDING_MODEL)
+        if _is_openai_model(config.EMBEDDING_MODEL):
+            self._embedder = None
+            self._openai_embed = OpenAI(api_key=config.OPENAI_API_KEY)
+        else:
+            from sentence_transformers import SentenceTransformer
+            self._embedder = SentenceTransformer(config.EMBEDDING_MODEL)
+            self._openai_embed = None
         self._llm = OpenAI(
             api_key=config.OPENROUTER_API_KEY,
             base_url=config.OPENROUTER_BASE_URL,
@@ -43,6 +55,18 @@ class BareMetalRAGPipeline(BaseRAGPipeline):
         self._chunks: list[str] = []
         self._sources: list[str] = []
         self._embeddings: np.ndarray | None = None
+
+    def _embed(self, texts: list[str]) -> np.ndarray:
+        if self._openai_embed is not None:
+            resp = self._openai_embed.embeddings.create(
+                model=config.EMBEDDING_MODEL, input=texts
+            )
+            vecs = np.array([d.embedding for d in resp.data], dtype=np.float32)
+            norms = np.linalg.norm(vecs, axis=1, keepdims=True)
+            return vecs / np.where(norms == 0, 1, norms)
+        return self._embedder.encode(
+            texts, show_progress_bar=False, normalize_embeddings=True, batch_size=32
+        )
 
     @property
     def name(self) -> str:
@@ -69,12 +93,7 @@ class BareMetalRAGPipeline(BaseRAGPipeline):
             self._chunks.extend(chunks)
             self._sources.extend([str(path)] * len(chunks))
 
-        self._embeddings = self._embedder.encode(
-            self._chunks,
-            show_progress_bar=False,
-            normalize_embeddings=True,
-            batch_size=32,
-        )
+        self._embeddings = self._embed(self._chunks)
 
         elapsed_ms = (time.perf_counter() - t0) * 1000
         return IndexStats(
@@ -86,7 +105,7 @@ class BareMetalRAGPipeline(BaseRAGPipeline):
     def query(self, question: str, top_k: int = config.TOP_K) -> RAGResult:
         t0 = time.perf_counter()
 
-        q_emb = self._embedder.encode([question], normalize_embeddings=True)[0]
+        q_emb = self._embed([question])[0]
         scores = self._embeddings @ q_emb
         top_idx = np.argsort(scores)[::-1][:top_k]
 

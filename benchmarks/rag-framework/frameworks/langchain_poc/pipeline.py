@@ -39,10 +39,16 @@ class LangChainRAGPipeline(BaseRAGPipeline):
     """LangChain: TextLoader → FAISS → RetrievalQA chain (LCEL variant noted in comments)."""
 
     def __init__(self) -> None:
-        from langchain_huggingface import HuggingFaceEmbeddings
         from langchain_openai import ChatOpenAI
 
-        self._embeddings = HuggingFaceEmbeddings(model_name=config.EMBEDDING_MODEL)
+        if config.EMBEDDING_MODEL.startswith("text-embedding"):
+            from langchain_openai import OpenAIEmbeddings
+            self._embeddings = OpenAIEmbeddings(
+                model=config.EMBEDDING_MODEL, openai_api_key=config.OPENAI_API_KEY
+            )
+        else:
+            from langchain_huggingface import HuggingFaceEmbeddings
+            self._embeddings = HuggingFaceEmbeddings(model_name=config.EMBEDDING_MODEL)
         self._llm = ChatOpenAI(
             model=config.LLM_MODEL,
             openai_api_key=config.OPENROUTER_API_KEY,

@@ -39,7 +39,6 @@ class LlamaIndexRAGPipeline(BaseRAGPipeline):
 
     def __init__(self) -> None:
         from llama_index.core import Settings
-        from llama_index.embeddings.huggingface import HuggingFaceEmbedding
         from llama_index.llms.openai import OpenAI as LlamaOpenAI
 
         Settings.llm = LlamaOpenAI(
@@ -49,7 +48,14 @@ class LlamaIndexRAGPipeline(BaseRAGPipeline):
             temperature=0.1,
             max_tokens=512,
         )
-        Settings.embed_model = HuggingFaceEmbedding(model_name=config.EMBEDDING_MODEL)
+        if config.EMBEDDING_MODEL.startswith("text-embedding"):
+            from llama_index.embeddings.openai import OpenAIEmbedding
+            Settings.embed_model = OpenAIEmbedding(
+                model=config.EMBEDDING_MODEL, api_key=config.OPENAI_API_KEY
+            )
+        else:
+            from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+            Settings.embed_model = HuggingFaceEmbedding(model_name=config.EMBEDDING_MODEL)
         Settings.chunk_size = config.CHUNK_SIZE
         Settings.chunk_overlap = config.CHUNK_OVERLAP
 

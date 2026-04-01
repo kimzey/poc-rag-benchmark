@@ -42,14 +42,24 @@ class HaystackRAGPipeline(BaseRAGPipeline):
     """Haystack 2.x: InMemoryDocumentStore → embedding retrieval → PromptBuilder → OpenAIGenerator."""
 
     def __init__(self) -> None:
-        from haystack.components.embedders import SentenceTransformersDocumentEmbedder
         from haystack.document_stores.in_memory import InMemoryDocumentStore
 
         self._doc_store = InMemoryDocumentStore()
-        self._doc_embedder = SentenceTransformersDocumentEmbedder(
-            model=config.EMBEDDING_MODEL, progress_bar=False
-        )
-        self._doc_embedder.warm_up()
+        self._use_openai_embed = config.EMBEDDING_MODEL.startswith("text-embedding")
+
+        if self._use_openai_embed:
+            from haystack.components.embedders import OpenAIDocumentEmbedder
+            from haystack.utils import Secret
+            self._doc_embedder = OpenAIDocumentEmbedder(
+                model=config.EMBEDDING_MODEL,
+                api_key=Secret.from_token(config.OPENAI_API_KEY),
+            )
+        else:
+            from haystack.components.embedders import SentenceTransformersDocumentEmbedder
+            self._doc_embedder = SentenceTransformersDocumentEmbedder(
+                model=config.EMBEDDING_MODEL, progress_bar=False
+            )
+            self._doc_embedder.warm_up()
         self._pipeline = None
 
     @property
@@ -69,7 +79,6 @@ class HaystackRAGPipeline(BaseRAGPipeline):
     def build_index(self, doc_paths: list[str]) -> IndexStats:
         from haystack import Document, Pipeline
         from haystack.components.builders import PromptBuilder
-        from haystack.components.embedders import SentenceTransformersTextEmbedder
         from haystack.components.generators import OpenAIGenerator
         from haystack.components.retrievers.in_memory import InMemoryEmbeddingRetriever
         from haystack.utils import Secret
@@ -90,12 +99,18 @@ class HaystackRAGPipeline(BaseRAGPipeline):
 
         # Build query pipeline (DAG)
         self._pipeline = Pipeline()
-        self._pipeline.add_component(
-            "embedder",
-            SentenceTransformersTextEmbedder(
+        if self._use_openai_embed:
+            from haystack.components.embedders import OpenAITextEmbedder
+            query_embedder = OpenAITextEmbedder(
+                model=config.EMBEDDING_MODEL,
+                api_key=Secret.from_token(config.OPENAI_API_KEY),
+            )
+        else:
+            from haystack.components.embedders import SentenceTransformersTextEmbedder
+            query_embedder = SentenceTransformersTextEmbedder(
                 model=config.EMBEDDING_MODEL, progress_bar=False
-            ),
-        )
+            )
+        self._pipeline.add_component("embedder", query_embedder)
         self._pipeline.add_component(
             "retriever",
             InMemoryEmbeddingRetriever(
