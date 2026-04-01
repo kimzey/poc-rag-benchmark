@@ -20,6 +20,7 @@ class OpenSearchAdapter(VectorDBClient):
             http_compress=True,
             use_ssl=False,
             verify_certs=False,
+            timeout=60,
         )
 
     def create_collection(self, name: str = INDEX) -> None:

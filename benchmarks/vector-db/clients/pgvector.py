@@ -25,6 +25,9 @@ class PgvectorAdapter(VectorDBClient):
     def connect(self) -> None:
         self._conn = psycopg2.connect(self.dsn)
         self._conn.autocommit = False
+        with self._conn.cursor() as cur:
+            cur.execute("CREATE EXTENSION IF NOT EXISTS vector")
+        self._conn.commit()
         register_vector(self._conn)
 
     def create_collection(self, name: str = TABLE) -> None:
@@ -96,6 +99,7 @@ class PgvectorAdapter(VectorDBClient):
         # Adjust params: query_vector used twice (score + order)
         p = [query_vector] + ([v for v in filter.values()] if filter else []) + [query_vector, top_k]
         with self._conn.cursor() as cur:
+            cur.execute("SET LOCAL hnsw.ef_search = 100")
             cur.execute(sql, p)
             rows = cur.fetchall()
 

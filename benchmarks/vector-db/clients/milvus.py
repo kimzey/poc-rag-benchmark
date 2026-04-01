@@ -61,6 +61,7 @@ class MilvusAdapter(VectorDBClient):
                 [r.metadata.get("source", "") for r in batch],
             ])
         self._collection.flush()
+        self._collection.load()
 
     def search(
         self,
@@ -68,7 +69,6 @@ class MilvusAdapter(VectorDBClient):
         top_k: int = 10,
         filter: Optional[dict] = None,
     ) -> list[SearchResult]:
-        self._collection.load()
         expr = None
         if filter:
             parts = [f'{k} == "{v}"' for k, v in filter.items()]
@@ -77,7 +77,7 @@ class MilvusAdapter(VectorDBClient):
         results = self._collection.search(
             data=[query_vector],
             anns_field="embedding",
-            param={"metric_type": "COSINE", "params": {"ef": 64}},
+            param={"metric_type": "COSINE", "params": {"ef": 100}},
             limit=top_k,
             expr=expr,
             output_fields=["access_level", "category", "source"],

@@ -56,11 +56,13 @@ MODEL_REGISTRY: dict[str, str] = {
     "bge_m3":           "models.bge_m3.BGEM3Model",
     "multilingual_e5":  "models.multilingual_e5.MultilingualE5LargeModel",
     "mxbai":            "models.mxbai.MxbaiEmbedLargeModel",
+    "wangchanberta":    "models.wangchanberta.WangchanBERTaModel",
     "openai_large":     "models.openai_large.OpenAILargeModel",
     "openai_small":     "models.openai_small.OpenAISmallModel",
+    "cohere_v3":        "models.cohere_v3.CohereEmbedV3Model",
 }
 
-OPEN_SOURCE_MODELS = {"bge_m3", "multilingual_e5", "mxbai"}
+OPEN_SOURCE_MODELS = {"bge_m3", "multilingual_e5", "mxbai", "wangchanberta"}
 
 
 # ── Document chunking ─────────────────────────────────────────────────────────
@@ -157,7 +159,7 @@ def _evaluate_model(
     # ── Index corpus ──────────────────────────────────────────────────────────
     console.print(f"  [dim]Indexing {len(chunks)} chunks...[/dim]")
 
-    # E5 uses query/passage prefixes via special method
+    # E5 and Cohere use query/passage prefixes via special methods
     is_e5 = hasattr(model, "encode_passages")
     if is_e5:
         idx_result = model.encode_passages(chunks)

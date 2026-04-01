@@ -1,8 +1,8 @@
-<!-- Generated: 2026-03-31 | Files scanned: 76 | Token estimate: ~520 -->
+<!-- Generated: 2026-04-01 | Files scanned: 79 | Token estimate: ~540 -->
 
 # RAG Spike Codemaps Index
 
-**Last Updated:** 2026-03-31 | **Project Phase:** 1 ✅ Vector DB | 2 🔄 RAG Framework | 3 🔄 Embedding Models | 3.5 🆕 LLM Providers | 4 🆕 API Layer | 5 🆕 Integration Testing | 6 🔄 RFC & Docs
+**Last Updated:** 2026-04-01 | **Project Phase:** 1 ✅ Vector DB | 2 🔄 RAG Framework | 3 🔄 Embedding Models | 3.5 🆕 LLM Providers | 4 🆕 API Layer | 5 🆕 Integration Testing | 6 🔄 RFC & Docs
 
 ## Quick Navigation
 
@@ -71,6 +71,8 @@ spike-rak/
 │   │   │   ├── bge_m3.py                # BAAI/bge-m3 (multilingual)
 │   │   │   ├── multilingual_e5.py       # intfloat/multilingual-e5-large
 │   │   │   ├── mxbai.py                 # mixedbread-ai/mxbai-embed-large-v1
+│   │   │   ├── wangchanberta.py         # airesearch/wangchanberta (Thai-specific)
+│   │   │   ├── cohere_v3.py             # embed-multilingual-v3.0 (commercial)
 │   │   │   ├── openai_large.py          # text-embedding-3-large
 │   │   │   └── openai_small.py          # text-embedding-3-small
 │   │   └── results/                     # embedding_model_results.json
@@ -111,6 +113,7 @@ spike-rak/
 │       ├── auth_routes.py              # POST /api/v1/auth/token
 │       ├── chat.py                     # POST /api/v1/chat/completions
 │       ├── documents.py                # GET/POST /api/v1/documents/*
+│       ├── feedback.py                 # POST /api/v1/feedback (rating 1-5 + comment)
 │       └── webhooks/
 │           └── line.py                 # POST /api/v1/webhooks/line (LINE Messaging API)
 │
@@ -141,7 +144,7 @@ spike-rak/
 |-------|------|--------|-----------|
 | 1 | Vector DB Comparison | ✅ Code done | `run_benchmark.py` + 4 adapters |
 | 2 | RAG Framework Comparison | 🔄 Code done, not run yet | `evaluate.py` + 4 framework PoCs |
-| 3 | Embedding Model Comparison | 🔄 Code done | `evaluate.py` + 5 model adapters (Thai/Eng) |
+| 3 | Embedding Model Comparison | 🔄 Code done | `evaluate.py` + 7 model adapters (Thai/Eng/Commercial) |
 | 3.5 | LLM Provider Comparison | 🆕 Code done | `evaluate.py` + 4 provider adapters (11 models) |
 | 4 | API Layer & Auth Design | 🆕 Code done | FastAPI + JWT + RBAC + Permission-Filtered Retrieval + LINE webhook |
 | 5 | Integration Testing | 🆕 Code done | 27 E2E tests, 7 scenarios, Locust load testing |

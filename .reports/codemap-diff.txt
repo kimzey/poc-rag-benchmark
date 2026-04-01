@@ -1,64 +1,58 @@
-Codemap Update Report — 2026-03-31 (Phase 6 docs update)
-==========================================================
+Codemap Diff Report — 2026-04-01
+================================
+Previous scan: 2026-03-31 (76 files)
+Current scan:  2026-04-01 (79 files)
 
-Previous scan: 2026-03-31 (Phases 1-5, 62 files scanned)
-Current scan:  2026-03-31 (Phases 1-6, 76 files scanned)
+FILES ADDED (3)
+---------------
++ api/routes/feedback.py
+    POST /api/v1/feedback — RAG response feedback collection (rating 1-5 + optional comment)
+    Requires Permission.chat_query. In-memory store (PoC).
 
-## Files Added (Phase 6 — RFC & Documentation)
++ benchmarks/embedding-model/models/wangchanberta.py
+    WangchanBERTaModel — Thai-specific, open-source, 768-dim, 416 max tokens, lock-in=0
 
-README.md                           [NEW] Root project README (Thai), architecture diagram, quick start
-CONTRIBUTING.md                     [NEW] Contribution guide: setup, deps, commit convention, adapter guide
-CLAUDE.md                           [NEW] Claude Code guidance for this repo
++ benchmarks/embedding-model/models/cohere_v3.py
+    CohereEmbedV3Model — embed-multilingual-v3.0, 1024-dim, 512 max tokens, $0.10/1M
 
-docs/guides/benchmarking.md         [NEW] Benchmark guide: all 4 phases, how to run + interpret results
-docs/guides/adding-adapters.md      [NEW] Tutorial: add adapters (VectorDB, RAG, Embedding, LLM) with code examples
-docs/glossary.md                    [NEW] RAG terminology glossary (Thai), ~50 terms across 7 categories
+FILES MODIFIED (5)
+------------------
+~ api/main.py
+    Added: feedback router registration (POST /api/v1/feedback)
+    Version bumped to 0.4.0
 
-docs/phases/phase-1-vector-db.md    [EXISTING] Phase 1 detailed doc
-docs/phases/phase-2-rag-framework.md [EXISTING] Phase 2 detailed doc
-docs/phases/phase-3-embedding.md    [EXISTING] Phase 3 detailed doc
-docs/phases/phase-3.5-llm-provider.md [EXISTING] Phase 3.5 detailed doc
-docs/phases/phase-4-api-auth.md     [EXISTING] Phase 4 detailed doc
-docs/phases/phase-5-integration.md  [EXISTING] Phase 5 detailed doc
-docs/phases/phase-6-rfc.md          [EXISTING] Phase 6 overview
+~ benchmarks/embedding-model/evaluate.py
+    MODEL_REGISTRY expanded: 5 → 7 models
+    OPEN_SOURCE_MODELS expanded to include "wangchanberta"
 
-docs/adr/ADR-001-vector-db.md       [EXISTING] Architecture Decision Record
-docs/adr/ADR-002-rag-framework.md   [EXISTING]
-docs/adr/ADR-003-embedding-model.md [EXISTING]
-docs/adr/ADR-004-llm-provider.md    [EXISTING]
-docs/adr/ADR-005-auth.md            [EXISTING]
-docs/adr/ADR-006-anti-lock-in.md    [EXISTING]
+~ pyproject.toml
+    bench-embed group: added cohere>=5.0
 
-docs/rfc/RFC-001-rag-tech-stack.md  [EXISTING] RFC draft (TODO sections pending benchmarks)
-docs/presentation/outline.md        [EXISTING] Presentation outline
+~ tests/integration/test_scenarios.py
+    Complete test suite: 27 tests, 7 scenarios
 
-## Files Modified
+~ uv.lock
+    Lock entries updated for cohere>=5.0 resolution
 
-docs/README.md                      [UPDATED] Added links to 3 new guides + glossary
+ARCHITECTURE CHANGES
+--------------------
+Phase 3: +2 embedding model adapters
+  - WangchanBERTa: first Thai-specific model in benchmark
+  - Cohere v3: first commercial non-OpenAI embedding model
 
-## New Dependencies Detected
+Phase 4: +1 API route
+  - POST /api/v1/feedback: feedback loop for RAG quality monitoring
 
-(none — no pyproject.toml changes)
+No new Docker services, no new dependencies in non-embed groups.
 
-## Architecture Changes
+CODEMAPS UPDATED
+----------------
+docs/CODEMAPS/architecture.md — Phase 3 model list, Phase 4 routes, Entry points table
+docs/CODEMAPS/INDEX.md — File tree (embedding models + feedback route), Phase 3 status
 
-- Phase 6 status: ⏳ Not started → 🔄 Docs done
-- No code architecture changes (API routes, ABCs, implementations unchanged)
+STALENESS WARNINGS
+------------------
+docs/rfc/RFC-001-rag-tech-stack.md — TODO sections pending benchmark results
+  → Recommend filling in Phase 1/2/3 data after benchmark runs complete
 
-## Codemap Updates Applied
-
-docs/CODEMAPS/INDEX.md              [UPDATED] Phase 6 status, docs/ tree expanded, file count 52→76
-docs/CODEMAPS/architecture.md       [UPDATED] Header metadata (file count, phase list)
-docs/CODEMAPS/dependencies.md       (no changes needed — deps unchanged)
-docs/CODEMAPS/data.md               (no changes needed — data schemas unchanged)
-
-## Staleness Warnings
-
-None — all codemaps updated today.
-
-## Diff Percentage: ~8% (minor — documentation only, no code changes)
-
-## Next Update Recommended After
-
-- Benchmark results are collected (fill TODO sections in RFC-001 and ADRs)
-- Any new adapter implementations added
+Diff percentage: ~2% (3 new files, 5 modified)

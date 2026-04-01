@@ -58,6 +58,8 @@ bench-embed = [
     "python-dotenv>=1.0.0",
     "numpy>=1.26.0",
     "rich>=13.7.0",
+    "transformers>=4.40.0",
+    "cohere>=5.0",
 ]
 
 # ── Phase 3.5: LLM Provider Benchmarks ────────────────────────────────────────

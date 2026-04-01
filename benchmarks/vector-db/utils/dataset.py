@@ -12,7 +12,7 @@ Design mirrors our permission control use case — so filtered search
 benchmarks directly measure production-relevant overhead.
 """
 import numpy as np
-from ..clients.base import BenchmarkRecord
+from clients.base import BenchmarkRecord
 
 ACCESS_LEVELS = ["public", "internal", "confidential"]
 CATEGORIES = ["tech", "hr", "finance", "ops"]

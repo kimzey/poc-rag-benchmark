@@ -1,4 +1,4 @@
-<!-- Generated: 2026-03-31 | Files scanned: 76 | Token estimate: ~1400 -->
+<!-- Generated: 2026-04-01 | Files scanned: 79 | Token estimate: ~1500 -->
 
 # Architecture Codemap
 
@@ -37,11 +37,13 @@ spike-rak/
 ├── [Phase 3 🔄] Embedding Model Comparison ─────────────────────
 │   benchmarks/embedding-model/evaluate.py
 │     └─ BaseEmbeddingModel (ABC)
-│         ├─ BGEM3Model            (BAAI/bge-m3, multilingual)
+│         ├─ BGEM3Model               (BAAI/bge-m3, multilingual)
 │         ├─ MultilingualE5LargeModel  (intfloat/multilingual-e5-large, query/passage prefix)
 │         ├─ MxbaiEmbedLargeModel      (mixedbread-ai/mxbai-embed-large-v1)
-│         ├─ OpenAILargeModel      (text-embedding-3-large)
-│         └─ OpenAISmallModel      (text-embedding-3-small)
+│         ├─ WangchanBERTaModel        (airesearch/wangchanberta-base-att-spm-uncased, Thai-specific, 768-dim)
+│         ├─ CohereEmbedV3Model        (embed-multilingual-v3.0, 1024-dim, $0.10/1M)
+│         ├─ OpenAILargeModel          (text-embedding-3-large)
+│         └─ OpenAISmallModel          (text-embedding-3-small)
 │   Data: Same 3 Thai/English/mixed docs from Phase 2 (reused corpus)
 │   Metrics: Recall@k, MRR, latency, cost, self-hostability, weighted scorecard
 │
@@ -65,6 +67,7 @@ spike-rak/
         POST   /api/v1/documents/index      → Trigger indexing
         GET    /api/v1/documents/collections → List collections
         GET    /api/v1/me                   → Current user info + permissions
+        POST   /api/v1/feedback             → Submit RAG response rating (1-5) + comment
         POST   /api/v1/webhooks/line        → LINE Messaging API adapter
     
     Auth Layer (api/auth/):
@@ -249,6 +252,7 @@ BaseLLMProvider (ABC)
 | `api/routes/auth_routes.py` | 4 | `/api/v1/auth/token` — JWT login |
 | `api/routes/chat.py` | 4 | `/api/v1/chat/completions` — RAG endpoint (with error handling) |
 | `api/routes/documents.py` | 4 | `/api/v1/documents/*` — document management |
+| `api/routes/feedback.py` | 4 | `/api/v1/feedback` — RAG response feedback (rating + comment) |
 | `api/routes/webhooks/line.py` | 4 | `/api/v1/webhooks/line` — LINE adapter |
 | `tests/integration/conftest.py` | 5 | Pytest fixtures (TestClient, auth tokens) |
 | `tests/integration/test_scenarios.py` | 5 | 27 E2E tests across 7 scenarios |

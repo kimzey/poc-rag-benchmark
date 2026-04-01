@@ -9,6 +9,7 @@ Endpoints:
   POST /api/v1/documents/index            — Trigger indexing (employee+)
   GET  /api/v1/documents/collections      — List visible collections
   GET  /api/v1/me                         — Current user info + permissions
+  POST /api/v1/feedback                   — Submit feedback on RAG response
   POST /api/v1/webhooks/line              — LINE Messaging API adapter
 
 Run:
@@ -23,6 +24,7 @@ from api.config import settings
 from api.routes.auth_routes import router as auth_router
 from api.routes.chat import router as chat_router
 from api.routes.documents import router as documents_router
+from api.routes.feedback import router as feedback_router
 from api.routes.webhooks.line import router as line_router
 
 app = FastAPI(
@@ -38,6 +40,7 @@ PREFIX = "/api/v1"
 app.include_router(auth_router, prefix=PREFIX)
 app.include_router(chat_router, prefix=PREFIX)
 app.include_router(documents_router, prefix=PREFIX)
+app.include_router(feedback_router, prefix=PREFIX)
 app.include_router(line_router, prefix=PREFIX)
 
 

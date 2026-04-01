@@ -512,6 +512,27 @@ class TestScenario7ThaiLanguageE2E:
         for chunk in r.json()["retrieved_chunks"]:
             assert chunk["access_level"] == "customer_kb"
 
+    def test_feedback_on_thai_query(self, client, employee_headers):
+        """Submit feedback on a Thai RAG response."""
+        r = client.post(
+            "/api/v1/feedback",
+            json={"query_id": "q-thai-001", "rating": 5, "comment": "ตอบถูกต้อง"},
+            headers=employee_headers,
+        )
+        assert r.status_code == 200
+        data = r.json()
+        assert data["feedback_id"].startswith("fb")
+        assert data["message"] == "Feedback recorded"
+
+    def test_feedback_invalid_rating_rejected(self, client, employee_headers):
+        """Rating must be 1-5."""
+        r = client.post(
+            "/api/v1/feedback",
+            json={"query_id": "q001", "rating": 0},
+            headers=employee_headers,
+        )
+        assert r.status_code == 422
+
     def test_thai_line_webhook_query(self, client):
         """Thai language query via LINE webhook."""
         payload = json.dumps({
