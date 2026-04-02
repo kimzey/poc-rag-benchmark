@@ -1,17 +1,22 @@
 """
-LangChain RAG PoC.
+LangChain RAG PoC — modern LCEL style (LangChain ≥ 0.2).
 
-Observations to note during evaluation:
-- LCEL (LangChain Expression Language) is the modern API — pipe syntax (|)
-- RetrievalQA is legacy but easier to understand; LCEL shown as alternative
-- HuggingFaceEmbeddings wraps sentence-transformers transparently
-- FAISS used for in-memory vector store (no server needed)
+Key changes from legacy:
+- RetrievalQA removed → LCEL pipe chain (retriever | prompt | llm | parser)
+- langchain.text_splitter → langchain_text_splitters
+- langchain.prompts → langchain_core.prompts
+- openai_api_base → base_url
+- RunnableParallel preserves source docs alongside the answer
 """
 from __future__ import annotations
 
 import logging
+import os
 import time
 from pathlib import Path
+
+# macOS: FAISS and PyTorch/HuggingFace both bundle libomp.dylib → duplicate OMP runtime crash
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 
 logging.getLogger("langchain").setLevel(logging.WARNING)
 logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -35,8 +40,12 @@ Question: {question}
 Answer:"""
 
 
+def _format_docs(docs) -> str:
+    return "\n\n".join(d.page_content for d in docs)
+
+
 class LangChainRAGPipeline(BaseRAGPipeline):
-    """LangChain: TextLoader → FAISS → RetrievalQA chain (LCEL variant noted in comments)."""
+    """LangChain: TextLoader → FAISS → LCEL chain (RunnableParallel)."""
 
     def __init__(self) -> None:
         from langchain_openai import ChatOpenAI
@@ -45,16 +54,17 @@ class LangChainRAGPipeline(BaseRAGPipeline):
             from langchain_openai import OpenAIEmbeddings
             self._embeddings = OpenAIEmbeddings(
                 model=config.EMBEDDING_MODEL,
-                openai_api_key=config.OPENROUTER_API_KEY,
-                openai_api_base=config.OPENROUTER_BASE_URL,
+                api_key=config.OPENROUTER_API_KEY,
+                base_url=config.OPENROUTER_BASE_URL,
             )
         else:
             from langchain_huggingface import HuggingFaceEmbeddings
             self._embeddings = HuggingFaceEmbeddings(model_name=config.EMBEDDING_MODEL)
+
         self._llm = ChatOpenAI(
             model=config.LLM_MODEL,
-            openai_api_key=config.OPENROUTER_API_KEY,
-            openai_api_base=config.OPENROUTER_BASE_URL,
+            api_key=config.OPENROUTER_API_KEY,
+            base_url=config.OPENROUTER_BASE_URL,
             temperature=0.1,
             max_tokens=512,
         )
@@ -66,13 +76,12 @@ class LangChainRAGPipeline(BaseRAGPipeline):
         return "langchain"
 
     def build_index(self, doc_paths: list[str]) -> IndexStats:
-        from langchain.prompts import PromptTemplate
-        from langchain.text_splitter import RecursiveCharacterTextSplitter
         from langchain_community.document_loaders import TextLoader
         from langchain_community.vectorstores import FAISS
-
-        # Legacy chain import — still works, mirrors how most tutorials are written
-        from langchain.chains import RetrievalQA
+        from langchain_core.output_parsers import StrOutputParser
+        from langchain_core.prompts import PromptTemplate
+        from langchain_core.runnables import RunnableParallel, RunnablePassthrough
+        from langchain_text_splitters import RecursiveCharacterTextSplitter
 
         t0 = time.perf_counter()
 
@@ -89,21 +98,20 @@ class LangChainRAGPipeline(BaseRAGPipeline):
         chunks = splitter.split_documents(docs)
         self._vectorstore = FAISS.from_documents(chunks, self._embeddings)
 
-        prompt = PromptTemplate(
-            template=_PROMPT_TEMPLATE,
-            input_variables=["context", "question"],
-        )
+        retriever = self._vectorstore.as_retriever(search_kwargs={"k": config.TOP_K})
+        prompt = PromptTemplate.from_template(_PROMPT_TEMPLATE)
 
-        # Legacy chain — for LCEL equivalent see: vectorstore.as_retriever() | prompt | llm
-        self._chain = RetrievalQA.from_chain_type(
-            llm=self._llm,
-            chain_type="stuff",
-            retriever=self._vectorstore.as_retriever(
-                search_kwargs={"k": config.TOP_K}
-            ),
-            chain_type_kwargs={"prompt": prompt},
-            return_source_documents=True,
+        # LCEL — pattern from official LangChain docs (RAG with sources)
+        chain_from_docs = (
+            RunnablePassthrough.assign(context=lambda x: _format_docs(x["context"]))
+            | prompt
+            | self._llm
+            | StrOutputParser()
         )
+        self._chain = RunnableParallel(
+            context=retriever,
+            question=RunnablePassthrough(),
+        ).assign(answer=chain_from_docs)
 
         elapsed_ms = (time.perf_counter() - t0) * 1000
         return IndexStats(
@@ -112,16 +120,16 @@ class LangChainRAGPipeline(BaseRAGPipeline):
             framework=self.name,
         )
 
-    def query(self, question: str, top_k: int = config.TOP_K) -> RAGResult:
+    def query(self, question: str, top_k: int = config.TOP_K) -> RAGResult:  # noqa: ARG002
         t0 = time.perf_counter()
 
-        result = self._chain.invoke({"query": question})
+        result = self._chain.invoke(question)
 
-        sources = [doc.metadata.get("source", "") for doc in result["source_documents"]]
-        chunks = [doc.page_content for doc in result["source_documents"]]
+        sources = [doc.metadata.get("source", "") for doc in result["context"]]
+        chunks = [doc.page_content for doc in result["context"]]
 
         return RAGResult(
-            answer=result["result"],
+            answer=result["answer"],
             sources=sources,
             latency_ms=(time.perf_counter() - t0) * 1000,
             retrieved_chunks=chunks,

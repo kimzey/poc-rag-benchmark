@@ -2,10 +2,10 @@
 
 ## คืออะไร
 
-LangChain เป็น framework สำหรับสร้าง LLM applications โดยเน้นความยืดหยุ่นในการ compose components ผ่าน "chains" ใช้ `TextLoader` โหลดเอกสาร, `RecursiveCharacterTextSplitter` chunk, `FAISS` เป็น in-memory vector store, และ `RetrievalQA` chain เชื่อม retrieve + generate
+LangChain เป็น framework สำหรับสร้าง LLM applications โดยเน้นความยืดหยุ่นในการ compose components ผ่าน LCEL (LangChain Expression Language) ใช้ `TextLoader` โหลดเอกสาร, `RecursiveCharacterTextSplitter` chunk, `FAISS` เป็น in-memory vector store, และ LCEL pipe chain เชื่อม retrieve + generate
 
-- LOC: ~125 บรรทัด
-- จุดเด่น: ecosystem ใหญ่, composable (LCEL)
+- LOC: ~100 บรรทัด
+- จุดเด่น: ecosystem ใหญ่, LCEL composable, source tracking
 - index ที่ใช้: FAISS in-memory
 
 ---
@@ -41,7 +41,9 @@ class LangChainRAGPipeline(BaseRAGPipeline):
 if config.EMBEDDING_MODEL.startswith("text-embedding"):
     from langchain_openai import OpenAIEmbeddings
     self._embeddings = OpenAIEmbeddings(
-        model=config.EMBEDDING_MODEL, openai_api_key=config.OPENAI_API_KEY
+        model=config.EMBEDDING_MODEL,
+        api_key=config.OPENROUTER_API_KEY,
+        base_url=config.OPENROUTER_BASE_URL,  # OpenRouter endpoint
     )
 else:
     from langchain_huggingface import HuggingFaceEmbeddings
@@ -49,17 +51,14 @@ else:
 
 self._llm = ChatOpenAI(
     model=config.LLM_MODEL,
-    openai_api_key=config.OPENROUTER_API_KEY,
-    openai_api_base=config.OPENROUTER_BASE_URL,  # OpenRouter endpoint
+    api_key=config.OPENROUTER_API_KEY,
+    base_url=config.OPENROUTER_BASE_URL,
     temperature=0.1,
     max_tokens=512,
 )
-
-self._vectorstore = None
-self._chain = None
 ```
 
-LangChain ใช้ `openai_api_base` override เพื่อชี้ไป OpenRouter (OpenAI-compatible endpoint)
+> `base_url` / `api_key` เป็น parameter ใหม่ (LangChain ≥ 0.2) แทน `openai_api_base` / `openai_api_key` แบบเก่า
 
 ---
 
@@ -84,68 +83,78 @@ chunks = splitter.split_documents(docs)
 # 4. สร้าง FAISS vector store
 self._vectorstore = FAISS.from_documents(chunks, self._embeddings)
 
-# 5. สร้าง prompt template
-prompt = PromptTemplate(
-    template=_PROMPT_TEMPLATE,
-    input_variables=["context", "question"],
-)
+# 5. สร้าง retriever + prompt
+retriever = self._vectorstore.as_retriever(search_kwargs={"k": config.TOP_K})
+prompt = PromptTemplate.from_template(_PROMPT_TEMPLATE)
 
-# 6. สร้าง RetrievalQA chain (legacy API)
-self._chain = RetrievalQA.from_chain_type(
-    llm=self._llm,
-    chain_type="stuff",        # "stuff" = ใส่ทุก chunk ใน prompt ทีเดียว
-    retriever=self._vectorstore.as_retriever(
-        search_kwargs={"k": config.TOP_K}
-    ),
-    chain_type_kwargs={"prompt": prompt},
-    return_source_documents=True,
+# 6. LCEL chain — pattern จาก official LangChain docs
+chain_from_docs = (
+    RunnablePassthrough.assign(context=lambda x: _format_docs(x["context"]))
+    | prompt
+    | self._llm
+    | StrOutputParser()
 )
+self._chain = RunnableParallel(
+    context=retriever,
+    question=RunnablePassthrough(),
+).assign(answer=chain_from_docs)
 ```
 
-**`RecursiveCharacterTextSplitter`:** แตกต่างจาก Bare Metal — split ด้วย **characters** ไม่ใช่ words, ลอง split ด้วย `["\n\n", "\n", " ", ""]` ตามลำดับ
+**`RecursiveCharacterTextSplitter`:** split ด้วย **characters** ไม่ใช่ words, ลอง split ด้วย `["\n\n", "\n", " ", ""]` ตามลำดับ
 
 **`FAISS`:** Facebook AI Similarity Search — fast in-memory ANN, เร็วกว่า numpy linear scan แต่ไม่ต้องมี server
 
-**`chain_type="stuff"`:** เอา retrieved chunks ทั้งหมด "stuff" เข้าไปใน single prompt (เหมาะสำหรับ top_k ไม่มาก)
+**`langchain_text_splitters`:** package แยกใหม่ (LangChain ≥ 0.2) แทน `langchain.text_splitter` เก่า
 
 ---
 
-### Legacy Chain vs LCEL (Modern API)
+### LCEL Chain (Modern API)
 
-```python
-# Legacy (ที่ใช้ใน code นี้) — ยังทำงานได้ แต่ deprecated
-self._chain = RetrievalQA.from_chain_type(...)
-
-# LCEL (modern) — pipe syntax, composable
-# chain = vectorstore.as_retriever() | prompt | llm
+```
+question
+    ↓
+RunnableParallel ──┬── context: retriever → [Document, ...]
+                  └── question: passthrough → "..."
+    ↓
+.assign(answer=chain_from_docs)
+    ↓
+RunnablePassthrough.assign(context=format_docs)   ← join docs เป็น string
+    ↓ prompt
+PromptTemplate → "Context: ...\n\nQuestion: ..."
+    ↓ llm
+ChatOpenAI → AIMessage
+    ↓ parser
+StrOutputParser → "answer string"
 ```
 
-Code นี้ใช้ Legacy API เพราะเข้าใจง่ายกว่า แต่ LCEL เป็น recommended approach ใน production
+**ทำไมต้องแบ่งเป็น 2 chain:**
+- `RunnableParallel` เก็บ `context` เป็น `list[Document]` ไว้เพื่อดึง source metadata
+- `chain_from_docs` รับ context ที่ format เป็น string แล้วส่งเข้า prompt
 
 ---
 
 ### `query()` — Chain invoke
 
 ```python
-def query(self, question: str, top_k: int) -> RAGResult:
+def query(self, question: str, top_k: int = config.TOP_K) -> RAGResult:
     t0 = time.perf_counter()
 
-    result = self._chain.invoke({"query": question})
-    # chain ทำ: embed question → FAISS search → build prompt → LLM → parse
+    result = self._chain.invoke(question)
+    # result = {"context": [Document, ...], "question": "...", "answer": "..."}
 
-    sources = [doc.metadata.get("source", "") for doc in result["source_documents"]]
-    chunks  = [doc.page_content for doc in result["source_documents"]]
+    sources = [doc.metadata.get("source", "") for doc in result["context"]]
+    chunks  = [doc.page_content for doc in result["context"]]
 
     return RAGResult(
-        answer=result["result"],
+        answer=result["answer"],
         sources=sources,
         latency_ms=(time.perf_counter() - t0) * 1000,
         retrieved_chunks=chunks,
     )
 ```
 
-`result["result"]` — คำตอบจาก LLM
-`result["source_documents"]` — list ของ `Document` ที่ retrieve มา (ได้เพราะ `return_source_documents=True`)
+`result["answer"]` — คำตอบจาก LLM (ผ่าน `StrOutputParser` แล้ว เป็น plain string)
+`result["context"]` — `list[Document]` ที่ retrieve มา (เก็บไว้ใน `RunnableParallel`)
 
 ---
 
@@ -165,26 +174,17 @@ Answer:
 
 ---
 
-## Data Flow
+## Package Imports (LangChain ≥ 0.2)
 
-```
-doc_paths
-    ↓ TextLoader.load()
-list[Document] (with metadata: source, etc.)
-    ↓ RecursiveCharacterTextSplitter.split_documents()
-list[Document] chunks
-    ↓ FAISS.from_documents(chunks, embeddings)
-FAISS vector store (in-memory)
-    ↓ (build RetrievalQA chain)
-chain object
-    ↓ (query time)
-question → chain.invoke({"query": question})
-    │  ├── embed question
-    │  ├── FAISS similarity search (top-k)
-    │  ├── format prompt
-    │  └── LLM generate
-result dict {"result": str, "source_documents": [...]}
-```
+| สิ่งที่ใช้ | Package | หมายเหตุ |
+|---|---|---|
+| `RecursiveCharacterTextSplitter` | `langchain_text_splitters` | แยกออกจาก `langchain` แล้ว |
+| `PromptTemplate` | `langchain_core.prompts` | ย้ายมาจาก `langchain.prompts` |
+| `RunnableParallel`, `RunnablePassthrough` | `langchain_core.runnables` | LCEL core |
+| `StrOutputParser` | `langchain_core.output_parsers` | parse AIMessage → str |
+| `TextLoader`, `FAISS` | `langchain_community` | third-party integrations |
+| `ChatOpenAI`, `OpenAIEmbeddings` | `langchain_openai` | OpenAI-specific |
+| `HuggingFaceEmbeddings` | `langchain_huggingface` | HF-specific |
 
 ---
 
@@ -193,7 +193,7 @@ result dict {"result": str, "source_documents": [...]}
 | ข้อดี | ข้อด้อย |
 |------|---------|
 | Ecosystem ใหญ่มาก (integrations หลายร้อยตัว) | API เปลี่ยนบ่อย (legacy → LCEL) |
-| LCEL pipe syntax ยืดหยุ่น | `RetrievalQA` deprecated ใน version ใหม่ |
+| LCEL pipe syntax ยืดหยุ่น composable | หลาย abstraction layer ทำให้ debug ยาก |
 | FAISS เร็ว ไม่ต้อง server | `chunk_size` เป็น characters (อาจสับสน) |
-| Source tracking ดี | หลาย abstraction layer ทำให้ debug ยาก |
-| `return_source_documents=True` ง่าย | |
+| Source tracking ผ่าน `RunnableParallel` | setup chain ซับซ้อนกว่า bare metal |
+| `StrOutputParser` จัดการ output format ให้ | |
