@@ -17,8 +17,12 @@ import argparse
 import json
 import logging
 import sys
+import time
 from pathlib import Path
 from typing import Any
+
+def _ts() -> str:
+    return str(int(time.time()))
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -437,7 +441,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--output",
-        default=str(RESULTS_DIR / "embedding_model_results.json"),
+        default=str(RESULTS_DIR / f"embedding_model_{_ts()}.json"),
         help="Output JSON path",
     )
     args = parser.parse_args()

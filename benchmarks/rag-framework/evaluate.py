@@ -18,6 +18,9 @@ import time
 from pathlib import Path
 from typing import Any
 
+def _ts() -> str:
+    return str(int(time.time()))
+
 logging.basicConfig(level=logging.WARNING)
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
@@ -206,7 +209,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--output",
-        default=str(RESULTS_DIR / "rag_framework_results.json"),
+        default=str(RESULTS_DIR / f"rag_framework_{_ts()}.json"),
         help="Output JSON path",
     )
     args = parser.parse_args()

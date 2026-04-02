@@ -24,8 +24,12 @@ import logging
 import math
 import re
 import sys
+import time
 from pathlib import Path
 from typing import Any
+
+def _ts() -> str:
+    return str(int(time.time()))
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -480,7 +484,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--output",
-        default=str(RESULTS_DIR / "llm_provider_results.json"),
+        default=str(RESULTS_DIR / f"llm_provider_{_ts()}.json"),
         help="Output JSON path",
     )
     args = parser.parse_args()

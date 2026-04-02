@@ -17,486 +17,6 @@
   },
   "results": [
     {
-      "model": "multilingual_e5",
-      "meta": {
-        "name": "multilingual-e5-large",
-        "dimensions": 1024,
-        "max_tokens": 512,
-        "cost_per_1m_tokens": 0.0,
-        "vendor_lock_in": 0,
-        "self_hostable": true
-      },
-      "index_time_ms": 1322.3368330509402,
-      "avg_query_latency_ms": 36.03385409805924,
-      "thai_recall": 1.0,
-      "eng_recall": 1.0,
-      "overall_recall": 1.0,
-      "mrr": 0.7666666666666667,
-      "queries": [
-        {
-          "id": 1,
-          "question": "พนักงานทั่วไปมีวันลาพักร้อนกี่วันต่อปี?",
-          "category": "thai_hr",
-          "gt_chunk_idx": 0,
-          "hit_at_k": true,
-          "reciprocal_rank": 1.0,
-          "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 63.25208296766505
-        },
-        {
-          "id": 2,
-          "question": "พนักงานที่อายุงาน 4 ปีได้วันลาพักร้อนกี่วัน?",
-          "category": "thai_hr",
-          "gt_chunk_idx": 3,
-          "hit_at_k": true,
-          "reciprocal_rank": 0.5,
-          "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 45.23275000974536
-        },
-        {
-          "id": 3,
-          "question": "ช่วงทดลองงาน (Probation) ใช้สิทธิ์ Work from Home ได้หรือไม่?",
-          "category": "thai_hr",
-          "gt_chunk_idx": 0,
-          "hit_at_k": true,
-          "reciprocal_rank": 1.0,
-          "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 38.84516702964902
-        },
-        {
-          "id": 4,
-          "question": "OT วันหยุดได้รับค่าตอบแทนกี่เท่า และพนักงาน Senior ได้อะไรแทน?",
-          "category": "thai_hr",
-          "gt_chunk_idx": 0,
-          "hit_at_k": true,
-          "reciprocal_rank": 1.0,
-          "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 40.73116701329127
-        },
-        {
-          "id": 5,
-          "question": "What is the rate limit for Customer tokens?",
-          "category": "english_api",
-          "gt_chunk_idx": 1,
-          "hit_at_k": true,
-          "reciprocal_rank": 1.0,
-          "retrieved_top1_chunk": "# TechCore Internal API Documentation ## RAG Service API — v1.0.0 Base URL: `https://api.techcore.internal/rag/v1` --- #",
-          "query_latency_ms": 42.87216597003862
-        },
-        {
-          "id": 6,
-          "question": "What HTTP status code is returned when rate limit is exceeded?",
-          "category": "english_api",
-          "gt_chunk_idx": 2,
-          "hit_at_k": true,
-          "reciprocal_rank": 0.5,
-          "retrieved_top1_chunk": "# TechCore Internal API Documentation ## RAG Service API — v1.0.0 Base URL: `https://api.techcore.internal/rag/v1` --- #",
-          "query_latency_ms": 22.504082997329533
-        },
-        {
-          "id": 7,
-          "question": "How do I verify a webhook signature in Python?",
-          "category": "english_api",
-          "gt_chunk_idx": 2,
-          "hit_at_k": true,
-          "reciprocal_rank": 1.0,
-          "retrieved_top1_chunk": "Valid token but insufficient permissions | | 404 | `NOT_FOUND` | Document or resource not found | | 413 | `PAYLOAD_TOO_L",
-          "query_latency_ms": 20.21504199365154
-        },
-        {
-          "id": 8,
-          "question": "วันลาป่วยติดต่อกัน 4 วันต้องทำอะไรบ้าง?",
-          "category": "thai_mixed",
-          "gt_chunk_idx": 0,
-          "hit_at_k": true,
-          "reciprocal_rank": 1.0,
-          "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 20.674375002272427
-        },
-        {
-          "id": 9,
-          "question": "ระบบ Performance Review ใช้เครื่องมืออะไร และทำปีละกี่ครั้ง?",
-          "category": "thai_mixed",
-          "gt_chunk_idx": 4,
-          "hit_at_k": true,
-          "reciprocal_rank": 0.3333333333333333,
-          "retrieved_top1_chunk": "# FAQ — ระบบ RAG Internal / TechCore Knowledge Base ## คำถามที่พบบ่อย (Frequently Asked Questions) --- ## หมวด: การใช้งา",
-          "query_latency_ms": 19.90754099097103
-        },
-        {
-          "id": 10,
-          "question": "If my API key is compromised, what should I do first?",
-          "category": "english_security",
-          "gt_chunk_idx": 2,
-          "hit_at_k": true,
-          "reciprocal_rank": 0.3333333333333333,
-          "retrieved_top1_chunk": "# TechCore Internal API Documentation ## RAG Service API — v1.0.0 Base URL: `https://api.techcore.internal/rag/v1` --- #",
-          "query_latency_ms": 46.104167005978525
-        }
-      ],
-      "weighted_score": 0.9386
-    },
-    {
-      "model": "bge_m3",
-      "meta": {
-        "name": "BGE-M3",
-        "dimensions": 1024,
-        "max_tokens": 8192,
-        "cost_per_1m_tokens": 0.0,
-        "vendor_lock_in": 0,
-        "self_hostable": true
-      },
-      "index_time_ms": 3599.8870000476018,
-      "avg_query_latency_ms": 33.88783310074359,
-      "thai_recall": 0.8333333333333334,
-      "eng_recall": 1.0,
-      "overall_recall": 0.9,
-      "mrr": 0.7,
-      "queries": [
-        {
-          "id": 1,
-          "question": "พนักงานทั่วไปมีวันลาพักร้อนกี่วันต่อปี?",
-          "category": "thai_hr",
-          "gt_chunk_idx": 0,
-          "hit_at_k": true,
-          "reciprocal_rank": 1.0,
-          "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 64.3908329657279
-        },
-        {
-          "id": 2,
-          "question": "พนักงานที่อายุงาน 4 ปีได้วันลาพักร้อนกี่วัน?",
-          "category": "thai_hr",
-          "gt_chunk_idx": 3,
-          "hit_at_k": true,
-          "reciprocal_rank": 0.5,
-          "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 48.28329099109396
-        },
-        {
-          "id": 3,
-          "question": "ช่วงทดลองงาน (Probation) ใช้สิทธิ์ Work from Home ได้หรือไม่?",
-          "category": "thai_hr",
-          "gt_chunk_idx": 0,
-          "hit_at_k": true,
-          "reciprocal_rank": 1.0,
-          "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 27.597708976827562
-        },
-        {
-          "id": 4,
-          "question": "OT วันหยุดได้รับค่าตอบแทนกี่เท่า และพนักงาน Senior ได้อะไรแทน?",
-          "category": "thai_hr",
-          "gt_chunk_idx": 0,
-          "hit_at_k": true,
-          "reciprocal_rank": 1.0,
-          "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 24.322790966834873
-        },
-        {
-          "id": 5,
-          "question": "What is the rate limit for Customer tokens?",
-          "category": "english_api",
-          "gt_chunk_idx": 1,
-          "hit_at_k": true,
-          "reciprocal_rank": 0.5,
-          "retrieved_top1_chunk": "# FAQ — ระบบ RAG Internal / TechCore Knowledge Base ## คำถามที่พบบ่อย (Frequently Asked Questions) --- ## หมวด: การใช้งา",
-          "query_latency_ms": 45.714625041000545
-        },
-        {
-          "id": 6,
-          "question": "What HTTP status code is returned when rate limit is exceeded?",
-          "category": "english_api",
-          "gt_chunk_idx": 2,
-          "hit_at_k": true,
-          "reciprocal_rank": 0.5,
-          "retrieved_top1_chunk": "# TechCore Internal API Documentation ## RAG Service API — v1.0.0 Base URL: `https://api.techcore.internal/rag/v1` --- #",
-          "query_latency_ms": 20.733540994115174
-        },
-        {
-          "id": 7,
-          "question": "How do I verify a webhook signature in Python?",
-          "category": "english_api",
-          "gt_chunk_idx": 2,
-          "hit_at_k": true,
-          "reciprocal_rank": 1.0,
-          "retrieved_top1_chunk": "Valid token but insufficient permissions | | 404 | `NOT_FOUND` | Document or resource not found | | 413 | `PAYLOAD_TOO_L",
-          "query_latency_ms": 20.82458301447332
-        },
-        {
-          "id": 8,
-          "question": "วันลาป่วยติดต่อกัน 4 วันต้องทำอะไรบ้าง?",
-          "category": "thai_mixed",
-          "gt_chunk_idx": 0,
-          "hit_at_k": true,
-          "reciprocal_rank": 1.0,
-          "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 20.74916602578014
-        },
-        {
-          "id": 9,
-          "question": "ระบบ Performance Review ใช้เครื่องมืออะไร และทำปีละกี่ครั้ง?",
-          "category": "thai_mixed",
-          "gt_chunk_idx": 4,
-          "hit_at_k": false,
-          "reciprocal_rank": 0.0,
-          "retrieved_top1_chunk": "# FAQ — ระบบ RAG Internal / TechCore Knowledge Base ## คำถามที่พบบ่อย (Frequently Asked Questions) --- ## หมวด: การใช้งา",
-          "query_latency_ms": 21.251417056191713
-        },
-        {
-          "id": 10,
-          "question": "If my API key is compromised, what should I do first?",
-          "category": "english_security",
-          "gt_chunk_idx": 2,
-          "hit_at_k": true,
-          "reciprocal_rank": 0.5,
-          "retrieved_top1_chunk": "# FAQ — ระบบ RAG Internal / TechCore Knowledge Base ## คำถามที่พบบ่อย (Frequently Asked Questions) --- ## หมวด: การใช้งา",
-          "query_latency_ms": 45.01037497539073
-        }
-      ],
-      "weighted_score": 0.7387
-    },
-    {
-      "model": "wangchanberta",
-      "meta": {
-        "name": "WangchanBERTa",
-        "dimensions": 768,
-        "max_tokens": 416,
-        "cost_per_1m_tokens": 0.0,
-        "vendor_lock_in": 0,
-        "self_hostable": true
-      },
-      "index_time_ms": 649.2007909691893,
-      "avg_query_latency_ms": 16.70287498855032,
-      "thai_recall": 0.8333333333333334,
-      "eng_recall": 1.0,
-      "overall_recall": 0.9,
-      "mrr": 0.5833333333333333,
-      "queries": [
-        {
-          "id": 1,
-          "question": "พนักงานทั่วไปมีวันลาพักร้อนกี่วันต่อปี?",
-          "category": "thai_hr",
-          "gt_chunk_idx": 0,
-          "hit_at_k": true,
-          "reciprocal_rank": 1.0,
-          "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 16.739291022531688
-        },
-        {
-          "id": 2,
-          "question": "พนักงานที่อายุงาน 4 ปีได้วันลาพักร้อนกี่วัน?",
-          "category": "thai_hr",
-          "gt_chunk_idx": 3,
-          "hit_at_k": true,
-          "reciprocal_rank": 0.3333333333333333,
-          "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 15.471791964955628
-        },
-        {
-          "id": 3,
-          "question": "ช่วงทดลองงาน (Probation) ใช้สิทธิ์ Work from Home ได้หรือไม่?",
-          "category": "thai_hr",
-          "gt_chunk_idx": 0,
-          "hit_at_k": false,
-          "reciprocal_rank": 0.0,
-          "retrieved_top1_chunk": "encrypted at rest (AES-256) และ in transit (TLS 1.3) - Audit log บันทึกทุก query ที่เกี่ยวข้องกับข้อมูล Customer --- *อั",
-          "query_latency_ms": 20.095832995139062
-        },
-        {
-          "id": 4,
-          "question": "OT วันหยุดได้รับค่าตอบแทนกี่เท่า และพนักงาน Senior ได้อะไรแทน?",
-          "category": "thai_hr",
-          "gt_chunk_idx": 0,
-          "hit_at_k": true,
-          "reciprocal_rank": 0.3333333333333333,
-          "retrieved_top1_chunk": "encrypted at rest (AES-256) และ in transit (TLS 1.3) - Audit log บันทึกทุก query ที่เกี่ยวข้องกับข้อมูล Customer --- *อั",
-          "query_latency_ms": 15.02887497190386
-        },
-        {
-          "id": 5,
-          "question": "What is the rate limit for Customer tokens?",
-          "category": "english_api",
-          "gt_chunk_idx": 1,
-          "hit_at_k": true,
-          "reciprocal_rank": 0.3333333333333333,
-          "retrieved_top1_chunk": "encrypted at rest (AES-256) และ in transit (TLS 1.3) - Audit log บันทึกทุก query ที่เกี่ยวข้องกับข้อมูล Customer --- *อั",
-          "query_latency_ms": 15.889208996668458
-        },
-        {
-          "id": 6,
-          "question": "What HTTP status code is returned when rate limit is exceeded?",
-          "category": "english_api",
-          "gt_chunk_idx": 2,
-          "hit_at_k": true,
-          "reciprocal_rank": 0.5,
-          "retrieved_top1_chunk": "encrypted at rest (AES-256) และ in transit (TLS 1.3) - Audit log บันทึกทุก query ที่เกี่ยวข้องกับข้อมูล Customer --- *อั",
-          "query_latency_ms": 19.181582960300148
-        },
-        {
-          "id": 7,
-          "question": "How do I verify a webhook signature in Python?",
-          "category": "english_api",
-          "gt_chunk_idx": 2,
-          "hit_at_k": true,
-          "reciprocal_rank": 0.3333333333333333,
-          "retrieved_top1_chunk": "encrypted at rest (AES-256) และ in transit (TLS 1.3) - Audit log บันทึกทุก query ที่เกี่ยวข้องกับข้อมูล Customer --- *อั",
-          "query_latency_ms": 16.55112497974187
-        },
-        {
-          "id": 8,
-          "question": "วันลาป่วยติดต่อกัน 4 วันต้องทำอะไรบ้าง?",
-          "category": "thai_mixed",
-          "gt_chunk_idx": 0,
-          "hit_at_k": true,
-          "reciprocal_rank": 1.0,
-          "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 14.664084010291845
-        },
-        {
-          "id": 9,
-          "question": "ระบบ Performance Review ใช้เครื่องมืออะไร และทำปีละกี่ครั้ง?",
-          "category": "thai_mixed",
-          "gt_chunk_idx": 4,
-          "hit_at_k": true,
-          "reciprocal_rank": 1.0,
-          "retrieved_top1_chunk": "encrypted at rest (AES-256) และ in transit (TLS 1.3) - Audit log บันทึกทุก query ที่เกี่ยวข้องกับข้อมูล Customer --- *อั",
-          "query_latency_ms": 15.062333026435226
-        },
-        {
-          "id": 10,
-          "question": "If my API key is compromised, what should I do first?",
-          "category": "english_security",
-          "gt_chunk_idx": 2,
-          "hit_at_k": true,
-          "reciprocal_rank": 1.0,
-          "retrieved_top1_chunk": "Valid token but insufficient permissions | | 404 | `NOT_FOUND` | Document or resource not found | | 413 | `PAYLOAD_TOO_L",
-          "query_latency_ms": 18.344624957535416
-        }
-      ],
-      "weighted_score": 0.7
-    },
-    {
-      "model": "mxbai",
-      "meta": {
-        "name": "mxbai-embed-large-v1",
-        "dimensions": 1024,
-        "max_tokens": 512,
-        "cost_per_1m_tokens": 0.0,
-        "vendor_lock_in": 0,
-        "self_hostable": true
-      },
-      "index_time_ms": 763.8346669846214,
-      "avg_query_latency_ms": 26.946387300267816,
-      "thai_recall": 0.8333333333333334,
-      "eng_recall": 1.0,
-      "overall_recall": 0.9,
-      "mrr": 0.6833333333333333,
-      "queries": [
-        {
-          "id": 1,
-          "question": "พนักงานทั่วไปมีวันลาพักร้อนกี่วันต่อปี?",
-          "category": "thai_hr",
-          "gt_chunk_idx": 0,
-          "hit_at_k": true,
-          "reciprocal_rank": 1.0,
-          "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 38.82745798910037
-        },
-        {
-          "id": 2,
-          "question": "พนักงานที่อายุงาน 4 ปีได้วันลาพักร้อนกี่วัน?",
-          "category": "thai_hr",
-          "gt_chunk_idx": 3,
-          "hit_at_k": true,
-          "reciprocal_rank": 0.5,
-          "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 36.47508303401992
-        },
-        {
-          "id": 3,
-          "question": "ช่วงทดลองงาน (Probation) ใช้สิทธิ์ Work from Home ได้หรือไม่?",
-          "category": "thai_hr",
-          "gt_chunk_idx": 0,
-          "hit_at_k": true,
-          "reciprocal_rank": 1.0,
-          "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 34.73583300365135
-        },
-        {
-          "id": 4,
-          "question": "OT วันหยุดได้รับค่าตอบแทนกี่เท่า และพนักงาน Senior ได้อะไรแทน?",
-          "category": "thai_hr",
-          "gt_chunk_idx": 0,
-          "hit_at_k": true,
-          "reciprocal_rank": 1.0,
-          "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 28.884083963930607
-        },
-        {
-          "id": 5,
-          "question": "What is the rate limit for Customer tokens?",
-          "category": "english_api",
-          "gt_chunk_idx": 1,
-          "hit_at_k": true,
-          "reciprocal_rank": 0.5,
-          "retrieved_top1_chunk": "# FAQ — ระบบ RAG Internal / TechCore Knowledge Base ## คำถามที่พบบ่อย (Frequently Asked Questions) --- ## หมวด: การใช้งา",
-          "query_latency_ms": 13.70662497356534
-        },
-        {
-          "id": 6,
-          "question": "What HTTP status code is returned when rate limit is exceeded?",
-          "category": "english_api",
-          "gt_chunk_idx": 2,
-          "hit_at_k": true,
-          "reciprocal_rank": 0.3333333333333333,
-          "retrieved_top1_chunk": "# TechCore Internal API Documentation ## RAG Service API — v1.0.0 Base URL: `https://api.techcore.internal/rag/v1` --- #",
-          "query_latency_ms": 30.08545801276341
-        },
-        {
-          "id": 7,
-          "question": "How do I verify a webhook signature in Python?",
-          "category": "english_api",
-          "gt_chunk_idx": 2,
-          "hit_at_k": true,
-          "reciprocal_rank": 1.0,
-          "retrieved_top1_chunk": "Valid token but insufficient permissions | | 404 | `NOT_FOUND` | Document or resource not found | | 413 | `PAYLOAD_TOO_L",
-          "query_latency_ms": 14.0008750022389
-        },
-        {
-          "id": 8,
-          "question": "วันลาป่วยติดต่อกัน 4 วันต้องทำอะไรบ้าง?",
-          "category": "thai_mixed",
-          "gt_chunk_idx": 0,
-          "hit_at_k": true,
-          "reciprocal_rank": 1.0,
-          "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 22.29049999732524
-        },
-        {
-          "id": 9,
-          "question": "ระบบ Performance Review ใช้เครื่องมืออะไร และทำปีละกี่ครั้ง?",
-          "category": "thai_mixed",
-          "gt_chunk_idx": 4,
-          "hit_at_k": false,
-          "reciprocal_rank": 0.0,
-          "retrieved_top1_chunk": "# FAQ — ระบบ RAG Internal / TechCore Knowledge Base ## คำถามที่พบบ่อย (Frequently Asked Questions) --- ## หมวด: การใช้งา",
-          "query_latency_ms": 13.209541037213057
-        },
-        {
-          "id": 10,
-          "question": "If my API key is compromised, what should I do first?",
-          "category": "english_security",
-          "gt_chunk_idx": 2,
-          "hit_at_k": true,
-          "reciprocal_rank": 0.5,
-          "retrieved_top1_chunk": "# FAQ — ระบบ RAG Internal / TechCore Knowledge Base ## คำถามที่พบบ่อย (Frequently Asked Questions) --- ## หมวด: การใช้งา",
-          "query_latency_ms": 37.248415988869965
-        }
-      ],
-      "weighted_score": 0.6917
-    },
-    {
       "model": "openai_small",
       "meta": {
         "name": "text-embedding-3-small",
@@ -506,8 +26,8 @@
         "vendor_lock_in": 9,
         "self_hostable": false
       },
-      "index_time_ms": 722.0372080337256,
-      "avg_query_latency_ms": 468.6414624855388,
+      "index_time_ms": 790.9865829860792,
+      "avg_query_latency_ms": 309.8337293951772,
       "thai_recall": 1.0,
       "eng_recall": 1.0,
       "overall_recall": 1.0,
@@ -521,7 +41,7 @@
           "hit_at_k": true,
           "reciprocal_rank": 1.0,
           "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 318.43712500995025
+          "query_latency_ms": 911.2352500669658
         },
         {
           "id": 2,
@@ -531,7 +51,7 @@
           "hit_at_k": true,
           "reciprocal_rank": 0.5,
           "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 664.47470796993
+          "query_latency_ms": 244.2275839857757
         },
         {
           "id": 3,
@@ -541,7 +61,7 @@
           "hit_at_k": true,
           "reciprocal_rank": 1.0,
           "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 658.5984579869546
+          "query_latency_ms": 242.5474589690566
         },
         {
           "id": 4,
@@ -551,7 +71,7 @@
           "hit_at_k": true,
           "reciprocal_rank": 1.0,
           "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 360.1783749763854
+          "query_latency_ms": 241.73145892564207
         },
         {
           "id": 5,
@@ -561,7 +81,7 @@
           "hit_at_k": true,
           "reciprocal_rank": 0.5,
           "retrieved_top1_chunk": "# FAQ — ระบบ RAG Internal / TechCore Knowledge Base ## คำถามที่พบบ่อย (Frequently Asked Questions) --- ## หมวด: การใช้งา",
-          "query_latency_ms": 311.8260839837603
+          "query_latency_ms": 272.2700829617679
         },
         {
           "id": 6,
@@ -571,7 +91,7 @@
           "hit_at_k": true,
           "reciprocal_rank": 0.5,
           "retrieved_top1_chunk": "# TechCore Internal API Documentation ## RAG Service API — v1.0.0 Base URL: `https://api.techcore.internal/rag/v1` --- #",
-          "query_latency_ms": 190.23895799182355
+          "query_latency_ms": 230.69287498947233
         },
         {
           "id": 7,
@@ -581,7 +101,7 @@
           "hit_at_k": true,
           "reciprocal_rank": 1.0,
           "retrieved_top1_chunk": "Valid token but insufficient permissions | | 404 | `NOT_FOUND` | Document or resource not found | | 413 | `PAYLOAD_TOO_L",
-          "query_latency_ms": 673.0067919706926
+          "query_latency_ms": 228.8757920032367
         },
         {
           "id": 8,
@@ -591,7 +111,7 @@
           "hit_at_k": true,
           "reciprocal_rank": 0.5,
           "retrieved_top1_chunk": "# FAQ — ระบบ RAG Internal / TechCore Knowledge Base ## คำถามที่พบบ่อย (Frequently Asked Questions) --- ## หมวด: การใช้งา",
-          "query_latency_ms": 194.35095798689872
+          "query_latency_ms": 253.82216600701213
         },
         {
           "id": 9,
@@ -601,7 +121,7 @@
           "hit_at_k": true,
           "reciprocal_rank": 0.3333333333333333,
           "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 671.4121669647284
+          "query_latency_ms": 233.00316708628088
         },
         {
           "id": 10,
@@ -611,130 +131,10 @@
           "hit_at_k": true,
           "reciprocal_rank": 0.3333333333333333,
           "retrieved_top1_chunk": "# FAQ — ระบบ RAG Internal / TechCore Knowledge Base ## คำถามที่พบบ่อย (Frequently Asked Questions) --- ## หมวด: การใช้งา",
-          "query_latency_ms": 643.8910000142641
+          "query_latency_ms": 239.93145895656198
         }
       ],
-      "weighted_score": 0.6102
-    },
-    {
-      "model": "openai_large",
-      "meta": {
-        "name": "text-embedding-3-large",
-        "dimensions": 3072,
-        "max_tokens": 8191,
-        "cost_per_1m_tokens": 0.13,
-        "vendor_lock_in": 9,
-        "self_hostable": false
-      },
-      "index_time_ms": 1054.385541996453,
-      "avg_query_latency_ms": 413.0635499022901,
-      "thai_recall": 1.0,
-      "eng_recall": 1.0,
-      "overall_recall": 1.0,
-      "mrr": 0.6666666666666667,
-      "queries": [
-        {
-          "id": 1,
-          "question": "พนักงานทั่วไปมีวันลาพักร้อนกี่วันต่อปี?",
-          "category": "thai_hr",
-          "gt_chunk_idx": 0,
-          "hit_at_k": true,
-          "reciprocal_rank": 0.5,
-          "retrieved_top1_chunk": "# FAQ — ระบบ RAG Internal / TechCore Knowledge Base ## คำถามที่พบบ่อย (Frequently Asked Questions) --- ## หมวด: การใช้งา",
-          "query_latency_ms": 889.6930419723503
-        },
-        {
-          "id": 2,
-          "question": "พนักงานที่อายุงาน 4 ปีได้วันลาพักร้อนกี่วัน?",
-          "category": "thai_hr",
-          "gt_chunk_idx": 3,
-          "hit_at_k": true,
-          "reciprocal_rank": 0.5,
-          "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 311.5088330232538
-        },
-        {
-          "id": 3,
-          "question": "ช่วงทดลองงาน (Probation) ใช้สิทธิ์ Work from Home ได้หรือไม่?",
-          "category": "thai_hr",
-          "gt_chunk_idx": 0,
-          "hit_at_k": true,
-          "reciprocal_rank": 1.0,
-          "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 294.3485830328427
-        },
-        {
-          "id": 4,
-          "question": "OT วันหยุดได้รับค่าตอบแทนกี่เท่า และพนักงาน Senior ได้อะไรแทน?",
-          "category": "thai_hr",
-          "gt_chunk_idx": 0,
-          "hit_at_k": true,
-          "reciprocal_rank": 1.0,
-          "retrieved_top1_chunk": "# นโยบายทรัพยากรบุคคล (HR Policy) ## บริษัท เทคคอร์ จำกัด — ฉบับปรับปรุง 2024 --- ## 1. วันทำงานและเวลาทำงาน บริษัทกำหนด",
-          "query_latency_ms": 859.3211669940501
-        },
-        {
-          "id": 5,
-          "question": "What is the rate limit for Customer tokens?",
-          "category": "english_api",
-          "gt_chunk_idx": 1,
-          "hit_at_k": true,
-          "reciprocal_rank": 1.0,
-          "retrieved_top1_chunk": "# TechCore Internal API Documentation ## RAG Service API — v1.0.0 Base URL: `https://api.techcore.internal/rag/v1` --- #",
-          "query_latency_ms": 383.82983300834894
-        },
-        {
-          "id": 6,
-          "question": "What HTTP status code is returned when rate limit is exceeded?",
-          "category": "english_api",
-          "gt_chunk_idx": 2,
-          "hit_at_k": true,
-          "reciprocal_rank": 0.5,
-          "retrieved_top1_chunk": "# TechCore Internal API Documentation ## RAG Service API — v1.0.0 Base URL: `https://api.techcore.internal/rag/v1` --- #",
-          "query_latency_ms": 295.5923750414513
-        },
-        {
-          "id": 7,
-          "question": "How do I verify a webhook signature in Python?",
-          "category": "english_api",
-          "gt_chunk_idx": 2,
-          "hit_at_k": true,
-          "reciprocal_rank": 1.0,
-          "retrieved_top1_chunk": "Valid token but insufficient permissions | | 404 | `NOT_FOUND` | Document or resource not found | | 413 | `PAYLOAD_TOO_L",
-          "query_latency_ms": 301.66366696357727
-        },
-        {
-          "id": 8,
-          "question": "วันลาป่วยติดต่อกัน 4 วันต้องทำอะไรบ้าง?",
-          "category": "thai_mixed",
-          "gt_chunk_idx": 0,
-          "hit_at_k": true,
-          "reciprocal_rank": 0.5,
-          "retrieved_top1_chunk": "# FAQ — ระบบ RAG Internal / TechCore Knowledge Base ## คำถามที่พบบ่อย (Frequently Asked Questions) --- ## หมวด: การใช้งา",
-          "query_latency_ms": 298.35158301284537
-        },
-        {
-          "id": 9,
-          "question": "ระบบ Performance Review ใช้เครื่องมืออะไร และทำปีละกี่ครั้ง?",
-          "category": "thai_mixed",
-          "gt_chunk_idx": 4,
-          "hit_at_k": true,
-          "reciprocal_rank": 0.3333333333333333,
-          "retrieved_top1_chunk": "# FAQ — ระบบ RAG Internal / TechCore Knowledge Base ## คำถามที่พบบ่อย (Frequently Asked Questions) --- ## หมวด: การใช้งา",
-          "query_latency_ms": 292.89662500377744
-        },
-        {
-          "id": 10,
-          "question": "If my API key is compromised, what should I do first?",
-          "category": "english_security",
-          "gt_chunk_idx": 2,
-          "hit_at_k": true,
-          "reciprocal_rank": 0.3333333333333333,
-          "retrieved_top1_chunk": "# FAQ — ระบบ RAG Internal / TechCore Knowledge Base ## คำถามที่พบบ่อย (Frequently Asked Questions) --- ## หมวด: การใช้งา",
-          "query_latency_ms": 203.4297909704037
-        }
-      ],
-      "weighted_score": 0.4684
+      "weighted_score": 0.9
     }
   ]
 }
